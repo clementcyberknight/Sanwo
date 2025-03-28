@@ -14,7 +14,7 @@ import {
   doc,
   setDoc,
 } from "firebase/firestore";
-import { useActiveAccount } from "thirdweb/react";
+import { useAccount } from "wagmi";
 
 const backdropVariants = {
   hidden: { opacity: 0 },
@@ -44,7 +44,7 @@ const WalletSendModal = ({ isOpen, onClose }) => {
   const [selectedToken, setSelectedToken] = useState("USDC"); // Default to USDC
   const [isAddressValid, setIsAddressValid] = useState(true);
   const [withdrawalCategory, setWithdrawalCategory] = useState("payroll");
-  const Account = useActiveAccount();
+  const Account = useAccount();
   const businessAddress = Account?.address;
 
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);

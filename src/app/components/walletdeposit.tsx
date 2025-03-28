@@ -14,7 +14,7 @@ import {
   doc,
   setDoc,
 } from "@/app/config/FirebaseConfig";
-import { useActiveAccount } from "thirdweb/react";
+import { useAccount } from "wagmi";
 
 const backdropVariants = {
   hidden: { opacity: 0 },
@@ -45,7 +45,7 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<any>(null);
   const [employerContract, setEmployerContract] = useState<any>(null);
-  const Account = useActiveAccount();
+  const Account = useAccount();
   const Companyaddress = Account?.address;
 
   useEffect(() => {
@@ -196,7 +196,7 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
         await approveTx.wait();
         console.log("Deposit approved successfully");
       } catch (error) {
-         //@ts-ignore
+        //@ts-ignore
         console.error("Approval failed:", error.message);
         await storeDepositTransaction(
           depositAmount,
@@ -240,7 +240,7 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
         );
       }
     } catch (error) {
-       //@ts-ignore
+      //@ts-ignore
       console.error("Transaction failed:", error.message);
       await storeDepositTransaction(
         depositAmount,

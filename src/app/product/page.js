@@ -16,25 +16,25 @@ import Header from "@/app/components/header";
 const ProductPage = () => {
   const features = [
     {
-      icon: <Wallet className="w-12 h-12 text-blue-600" />,
+      icon: <Wallet className="w-12 h-12 text-black" />,
       title: "USDC Wallet Management",
       description:
         "Secure multi-signature wallets with complete visibility and control over your crypto treasury.",
     },
     {
-      icon: <CreditCard className="w-12 h-12 text-blue-600" />,
+      icon: <CreditCard className="w-12 h-12 text-black" />,
       title: "Corporate Cards",
       description:
         "Issue crypto-enabled cards to your team for easy expense management and tracking.",
     },
     {
-      icon: <FileText className="w-12 h-12 text-blue-600" />,
+      icon: <FileText className="w-12 h-12 text-black" />,
       title: "AI Bookkeeping",
       description:
         "Automated transaction categorization and reconciliation powered by artificial intelligence.",
     },
     {
-      icon: <Users className="w-12 h-12 text-blue-600" />,
+      icon: <Users className="w-12 h-12 text-black" />,
       title: "Global USDC Payroll",
       description:
         "Pay your worldwide team in USDC with compliant, automated payroll processing.",
@@ -43,19 +43,19 @@ const ProductPage = () => {
 
   const benefits = [
     {
-      icon: <Building2 className="w-8 h-8 text-blue-600" />,
+      icon: <Building2 className="w-8 h-8 text-black" />,
       title: "Built for Web3 Companies",
       description:
         "Native support for crypto operations, eliminating the need for constant fiat conversion.",
     },
     {
-      icon: <Landmark className="w-8 h-8 text-blue-600" />,
+      icon: <Landmark className="w-8 h-8 text-black" />,
       title: "Regulatory Compliance",
       description:
         "Stay compliant with automated reporting and documentation for crypto transactions.",
     },
     {
-      icon: <BookOpen className="w-8 h-8 text-blue-600" />,
+      icon: <BookOpen className="w-8 h-8 text-black" />,
       title: "Simplified Operations",
       description:
         "Reduce administrative overhead with our integrated platform approach.",
@@ -67,12 +67,12 @@ const ProductPage = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 to-white">
+      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-medium text-gray-900 mb-6">
             The Complete Back Office for
             <br />
-            <span className="text-blue-600">Web3 Businesses</span>
+            <span className="text-black">Web3 Businesses</span>
           </h1>
           <p className="max-w-2xl mx-auto text-xl text-gray-600 mb-8">
             Manage your entire business operations in USDC - from treasury and
@@ -80,7 +80,7 @@ const ProductPage = () => {
           </p>
           <Link
             href="/book-demo"
-            className="bg-blue-600 text-white px-8 py-4 rounded-full hover:bg-blue-700 transition duration-300"
+            className="bg-black text-white px-8 py-4 rounded-full hover:bg-gray-900 transition duration-300"
           >
             Get Started
           </Link>
@@ -128,25 +128,25 @@ const ProductPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-blue-600">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-medium text-white mb-6">
             Ready to modernize your business operations?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-gray-100 mb-8">
             Join forward-thinking companies already using Sanwó to streamline
             their operations.
           </p>
           <div className="flex justify-center space-x-4">
             <Link
               href="/book-demo"
-              className="bg-white text-blue-600 px-8 py-4 rounded-full hover:bg-blue-50 transition duration-300"
+              className="bg-white text-black px-8 py-4 rounded-full hover:bg-gray-50 transition duration-300"
             >
               Book A Demo
             </Link>
             <Link
               href="/auth/login"
-              className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full hover:bg-blue-700 transition duration-300"
+              className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full hover:bg-gray-700 transition duration-300"
             >
               Login
             </Link>

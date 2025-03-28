@@ -63,22 +63,22 @@ const PricingPage = () => {
 
   const commonFeatures = [
     {
-      icon: <Wallet className="w-5 h-5 text-blue-600" />,
+      icon: <Wallet className="w-5 h-5 text-black" />,
       title: "Wallet Management",
       description: "Secure USDC wallet management for your business",
     },
     {
-      icon: <FileText className="w-5 h-5 text-blue-600" />,
+      icon: <FileText className="w-5 h-5 text-black" />,
       title: "Reports & Analytics",
       description: "Comprehensive transaction tracking and analysis",
     },
     {
-      icon: <Users className="w-5 h-5 text-blue-600" />,
+      icon: <Users className="w-5 h-5 text-black" />,
       title: "Role Management",
       description: "Advanced user roles and permissions",
     },
     {
-      icon: <Clock className="w-5 h-5 text-blue-600" />,
+      icon: <Clock className="w-5 h-5 text-black" />,
       title: "24/7 Support",
       description: "Round-the-clock customer support",
     },
@@ -89,7 +89,7 @@ const PricingPage = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 to-white">
+      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-medium text-gray-900 mb-6">
             Simple, Transparent Pricing
@@ -108,7 +108,7 @@ const PricingPage = () => {
               <div
                 key={index}
                 className={`bg-white rounded-lg shadow-lg overflow-hidden ${
-                  plan.highlight ? "ring-2 ring-blue-600" : ""
+                  plan.highlight ? "ring-2 ring-black" : ""
                 }`}
               >
                 <div className="p-8">
@@ -130,7 +130,7 @@ const PricingPage = () => {
                     }
                     className={`w-full py-3 px-6 rounded-lg ${
                       plan.highlight
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        ? "bg-black text-white hover:bg-gray-900"
                         : "bg-gray-100 text-gray-900 hover:bg-gray-200"
                     } transition duration-300`}
                   >
@@ -141,7 +141,7 @@ const PricingPage = () => {
                   <ul className="space-y-4">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start">
-                        <Check className="w-5 h-5 text-blue-600 mr-2 mt-1 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-black mr-2 mt-1 flex-shrink-0" />
                         <span className="text-gray-600">{feature}</span>
                       </li>
                     ))}
@@ -179,22 +179,22 @@ const PricingPage = () => {
           <h2 className="text-3xl font-medium text-gray-900 mb-12">
             Frequently Asked Questions
           </h2>
-          {/* Add FAQ content here if needed 
-        </div>
+          {/* Add FAQ content here if needed */}
+      {/* </div>
       </section> */}
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-blue-600">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-medium text-white mb-6">
             Ready to get started with Sanwó?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-gray-100 mb-8">
             Join leading web3 companies already using Sanwó
           </p>
           <Link
             href="/book-demo"
-            className="bg-white text-blue-600 px-8 py-4 rounded-full hover:bg-blue-50 transition duration-300"
+            className="bg-white text-black px-8 py-4 rounded-full hover:bg-gray-50 transition duration-300"
           >
             Start Your Free Trial
           </Link>

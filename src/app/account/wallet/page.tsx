@@ -188,19 +188,6 @@ const WalletDashboard = () => {
   };
 
   useEffect(() => {
-    const initializeKit = async () => {
-      const newKit = new StellarWalletsKit({
-        network: WalletNetwork.TESTNET,
-        selectedWalletId: XBULL_ID,
-        modules: allowAllModules(),
-      });
-      setKit(newKit);
-    };
-
-    initializeKit();
-  }, []);
-
-  useEffect(() => {
     fetchTokenPrices(); // Fetch prices when component mounts
   }, []);
 
