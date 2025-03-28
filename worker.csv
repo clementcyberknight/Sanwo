@@ -1,0 +1,77 @@
+name,email,role,salary,note
+Alice Smith,alice.smith@example.com,Developer,120000,Experienced React Developer
+Bob Johnson,bob.johnson@example.com,Designer,90000,UI/UX Designer
+Charlie Brown,charlie.brown@example.com,Marketing,75000,Social Media Manager
+David Lee,david.lee@example.com,Manager,150000,Project Manager
+Eve Williams,eve.williams@example.com,Support,60000,Customer Support Specialist
+Frank Miller,frank.miller@example.com,Developer,130000,Senior Backend Engineer
+Grace Davis,grace.davis@example.com,Designer,85000,Graphic Designer
+Henry Wilson,henry.wilson@example.com,Marketing,80000,Content Creator
+Ivy Moore,ivy.moore@example.com,Manager,140000,Team Lead
+Jack Taylor,jack.taylor@example.com,Support,65000,Technical Support
+Karen White,karen.white@example.com,Admin,95000,Office Manager
+Liam Black,liam.black@example.com,Developer,110000,Frontend Developer
+Mia Green,mia.green@example.com,Designer,70000,Web Designer
+Noah King,noah.king@example.com,Marketing,78000,SEO Specialist
+Olivia Hall,olivia.hall@example.com,Manager,160000,Director of Operations
+Peter Wright,peter.wright@example.com,Support,55000,Help Desk Analyst
+Quinn Adams,quinn.adams@example.com,Admin,100000,Human Resources
+Ryan Baker,ryan.baker@example.com,Developer,125000,Full Stack Developer
+Sophia Clark,sophia.clark@example.com,Designer,92000,Product Designer
+Thomas Hill,thomas.hill@example.com,Marketing,82000,Email Marketing Specialist
+Uma Scott,uma.scott@example.com,Developer,115000,Junior Developer
+Victor Lewis,victor.lewis@example.com,Designer,88000,UX Researcher
+Wendy Young,wendy.young@example.com,Marketing,72000,Marketing Assistant
+Xavier Allen,xavier.allen@example.com,Manager,145000,Sales Manager
+Yasmine Turner,yasmine.turner@example.com,Support,63000,Customer Success Manager
+Zane Harris,zane.harris@example.com,Admin,98000,Executive Assistant
+Ava Martin,ava.martin@example.com,Developer,128000,Senior Frontend Developer
+Billy Thompson,billy.thompson@example.com,Designer,91000,UI Designer
+Chloe Garcia,chloe.garcia@example.com,Marketing,76000,Content Strategist
+Daniel Rodriguez,daniel.rodriguez@example.com,Manager,155000,Operations Manager
+Emily Williams,emily.williams2@example.com,Support,58000,Technical Support Specialist
+Finn Brown,finn.brown@example.com,Developer,132000,Backend Developer
+Georgia Davis,georgia.davis@example.com,Designer,83000,Visual Designer
+Harry Miller,harry.miller@example.com,Marketing,81000,Digital Marketing Specialist
+Isla Wilson,isla.wilson@example.com,Manager,138000,Project Lead
+Jacob Moore,jacob.moore@example.com,Support,67000,IT Support
+Kelly Taylor,kelly.taylor@example.com,Admin,93000,Administrative Assistant
+Lucas White,lucas.white@example.com,Developer,108000,Software Engineer
+Maya Black,maya.black@example.com,Designer,73000,Interaction Designer
+Nathan Green,nathan.green@example.com,Marketing,79000,Social Media Coordinator
+Oscar King,oscar.king@example.com,Manager,162000,General Manager
+Phoebe Hall,phoebe.hall@example.com,Support,54000,Customer Service Representative
+Quentin Wright,quentin.wright@example.com,Admin,102000,HR Manager
+Rachel Adams,rachel.adams@example.com,Developer,123000,QA Engineer
+Sam Baker,sam.baker@example.com,Designer,94000,Brand Designer
+Tara Clark,tara.clark@example.com,Marketing,84000,Marketing Analyst
+Ulysses Hill,ulysses.hill@example.com,Developer,118000,Mobile Developer
+Violet Hill,violet.hill@example.com,Designer, 89000,Illustrator
+William Allen,william.allen@example.com,Marketing,74000,PPC Specialist
+Xenia Turner,xenia.turner@example.com,Manager,148000,HR Director
+Yara Harris,yara.harris@example.com,Support,61000,Tier 2 Support
+Zachary Lewis,zachary.lewis@example.com,Admin,96000,Payroll Specialist
+Amelia Young,amelia.young@example.com,Developer,126000,Data Scientist
+Benjamin Martin,benjamin.martin@example.com,Designer, 87000, Art Director
+Catherine Garcia,catherine.garcia@example.com,Marketing, 77000, Marketing Coordinator
+David Rodriguez,david.rodriguez2@example.com,Manager, 152000, IT Manager
+Eleanor Clark,eleanor.clark@example.com, Support, 59000, Customer Support Agent
+Frederick Adams,frederick.adams@example.com, Developer,134000, Senior Software Engineer
+Gabrielle Baker,gabrielle.baker@example.com,Designer,86000,Motion Graphics Designer
+Hugo Wilson,hugo.wilson@example.com,Marketing,71000,Copywriter
+Isabelle Moore,isabelle.moore@example.com,Manager,142000,Product Manager
+Jasper Taylor,jasper.taylor@example.com,Support,69000,Support Engineer
+Katherine White,katherine.white@example.com,Admin,90000,Office Administrator
+Leo Green,leo.green@example.com,Developer,112000,Web Developer
+Mila King,mila.king@example.com,Designer,75000,Junior Designer
+Nicholas Hall,nicholas.hall@example.com,Marketing,80000,SEO Analyst
+Oliver Wright,oliver.wright@example.com,Manager,158000,Engineering Manager
+Penelope Adams,penelope.adams@example.com,Support,56000,Help Desk Technician
+Quincy Baker,quincy.baker@example.com,Admin,99000,Recruiter
+Rebecca Clark,rebecca.clark@example.com,Developer,121000,Software Developer
+Steven Lewis,steven.lewis@example.com,Designer, 93000, UX/UI Designer
+Tiffany Young,tiffany.young@example.com,Marketing,83000,Content Marketing Manager
+Uriah Allen,uriah.allen@example.com,Developer,116000,Junior Full Stack Developer
+Valentina Garcia,valentina.garcia@example.com,Designer,89000,Visual Communication Designer
+Wyatt Rodriguez,wyatt.rodriguez@example.com,Marketing,73000,Marketing Intern
+Xander Williams,xander.williams@example.com,Manager,149000,Business Development Manager
