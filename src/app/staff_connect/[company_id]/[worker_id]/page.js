@@ -14,29 +14,8 @@ import {
   doc,
   getDoc,
 } from "@/app/config/FirebaseConfig";
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import { lightTheme } from "thirdweb/react";
-import { inAppWallet, createWallet } from "thirdweb/wallets";
-import { createThirdwebClient } from "thirdweb";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useParams } from "next/navigation";
-
-const client = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID,
-});
-
-const wallets = [
-  inAppWallet({
-    auth: {
-      options: ["passkey", "email", "google", "github"],
-    },
-  }),
-  createWallet("io.metamask"),
-  createWallet("com.coinbase.wallet"),
-  createWallet("me.rainbow"),
-  createWallet("io.rabby"),
-  createWallet("io.zerion.wallet"),
-  createWallet("com.bitget.web3"),
-];
 
 export default function WorkerConnectPage() {
   const router = useRouter();
@@ -46,7 +25,9 @@ export default function WorkerConnectPage() {
   const [walletAddress, setWalletAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const account = useActiveAccount();
+  const account = useAccount();
+  const { connectors, connect, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
 
   // Handle responsive layout
   useEffect(() => {
@@ -135,7 +116,7 @@ export default function WorkerConnectPage() {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-white to-blue-50">
+      <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-white to-gray-50">
         <ToastContainer />
 
         {/* Left Section */}
@@ -174,7 +155,7 @@ export default function WorkerConnectPage() {
                 type="text"
                 value={walletAddress}
                 placeholder="Connect your wallet"
-                className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:border-[#0051FF] text-gray-600"
+                className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:border-black text-gray-600"
                 readOnly
                 disabled
               />
@@ -182,30 +163,51 @@ export default function WorkerConnectPage() {
 
             {/* Connect Wallet Button */}
             <div className="mb-8 flex justify-center">
-              <ConnectButton
-                className="w-full py-4 rounded-xl"
-                client={client}
-                wallets={wallets}
-                theme={lightTheme({
-                  colors: { primaryButtonBg: "hsl(221, 100%, 50%)" },
-                })}
-                connectButton={{ label: "Connect Wallet" }}
-                connectModal={{
-                  size: isMobile ? "compact" : "wide",
-                  title: "Connect Wallet",
-                }}
-                onConnect={(payload) => {
-                  console.log("Connected wallet:", payload);
-                  console.log("Wallet connect address:", account?.address);
-                }}
-              />
+              {!address ? (
+                <div>
+                  {connectors
+                    .filter((connector) => connector.name === "MetaMask")
+                    .map((connector) => (
+                      <button
+                        key={connector.uid}
+                        onClick={() => connect({ connector })}
+                        disabled={isPending}
+                        className="w-full py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors duration-200 text-white flex items-center justify-center"
+                      >
+                        {isPending ? (
+                          <>
+                            <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                            Connecting...
+                          </>
+                        ) : (
+                          "Connect Wallet"
+                        )}
+                      </button>
+                    ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-gray-100 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-sm">
+                      {address.slice(0, 6)}...{address.slice(-4)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => disconnect()}
+                    className="text-red-600 hover:text-red-800 text-sm font-medium"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
               disabled={isLoading || !account}
-              className={`w-full bg-[#0051FF] text-white py-4 rounded-xl mb-4 hover:bg-blue-600 ${
+              className={`w-full bg-black text-white py-4 rounded-xl mb-4 hover:bg-gray-900 ${
                 isMobile ? "text-base" : "text-lg"
               } font-medium ${
                 isLoading || !account ? "opacity-50 cursor-not-allowed" : ""
@@ -226,11 +228,11 @@ export default function WorkerConnectPage() {
               className={`text-gray-500 ${isMobile ? "text-sm" : "text-base"}`}
             >
               By submitting or connecting your wallet you agree to{" "}
-              <Link href="/terms" className="text-[#0051FF] hover:underline">
+              <Link href="/terms" className="text-black hover:underline">
                 Terms of service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="text-[#0051FF] hover:underline">
+              <Link href="/privacy" className="text-black hover:underline">
                 privacy policy
               </Link>
               .
@@ -240,7 +242,7 @@ export default function WorkerConnectPage() {
 
         {/* Right Section - Hidden on Mobile */}
         {!isMobile && (
-          <div className="w-1/2 bg-[#0051FF] p-16 flex flex-col justify-center">
+          <div className="w-1/2 bg-black p-16 flex flex-col justify-center">
             <div className="text-white max-w-xl">
               <h2 className="text-5xl font-bold mb-6">
                 No limits, no borders, no wahala.
@@ -312,7 +314,7 @@ export default function WorkerConnectPage() {
               <button
                 onClick={handleConfirm}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-[#0051FF] text-white rounded-xl"
+                className="flex-1 px-4 py-2 bg-black text-white rounded-xl"
               >
                 {isLoading ? (
                   <>
@@ -331,7 +333,7 @@ export default function WorkerConnectPage() {
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-8 rounded-xl text-center max-w-md w-full">
-            <div className="w-20 h-20 bg-[#0051FF] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
                 className="w-10 h-10 text-white"
                 fill="none"
@@ -353,7 +355,7 @@ export default function WorkerConnectPage() {
             >
               Successfully sent
             </h3>
-            <p className="text-[#0051FF] text-lg">wallet address saved</p>
+            <p className="text-black text-lg">wallet address saved</p>
           </div>
         </div>
       )}

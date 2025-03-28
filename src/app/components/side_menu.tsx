@@ -154,8 +154,8 @@ const SideMenu = () => {
 
   const companyInitial = companyData?.name
     ? companyData.name.charAt(0).toUpperCase()
-    : "T";
-  const companyName = companyData?.name || "Loading";
+    : "S"; // Changed default initial to "S"
+  const companyName = companyData?.name || "Sanwó Business"; // Changed default company name to "Sanwó Business"
 
   return (
     <aside
@@ -164,7 +164,9 @@ const SideMenu = () => {
       {/* Company Logo */}
       <div className="p-4 border-b dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+            {" "}
+            {/* Changed logo background to black */}
             <span className="text-white font-bold text-xl">
               {companyInitial}
             </span>
@@ -188,7 +190,7 @@ const SideMenu = () => {
                   item.disabled
                     ? "cursor-not-allowed opacity-50"
                     : pathname === item.path
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                    ? "bg-gray-100 text-black dark:bg-gray-900 dark:text-white" // Changed active link styles to black and white
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
                 title={item.name}
@@ -218,7 +220,7 @@ const SideMenu = () => {
                   key={connector.uid}
                   onClick={() => connect({ connector })}
                   disabled={isPending}
-                  className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white flex items-center justify-center"
+                  className="w-full py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors duration-200 text-white flex items-center justify-center" // Changed button styles to black and white
                 >
                   {isPending ? (
                     <>

@@ -462,7 +462,7 @@ export default function PayrollPage() {
                   onClick={() => handlePageChange(number)}
                   className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                     currentPage === number
-                      ? "bg-blue-600 text-white"
+                      ? "bg-black text-white"
                       : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                   }`}
                 >
@@ -689,15 +689,15 @@ export default function PayrollPage() {
     <div
       className={`border rounded-lg p-4 cursor-pointer transition-all ${
         isSelected
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-200 hover:border-blue-200 hover:bg-blue-50"
+          ? "border-black bg-gray-50"
+          : "border-gray-200 hover:border-black hover:bg-gray-50"
       }`}
       onClick={onChange}
     >
       <div className="flex items-start space-x-3">
         <div
           className={`mt-0.5 h-5 w-5 rounded-full border flex items-center justify-center ${
-            isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
+            isSelected ? "border-black bg-black" : "border-gray-300"
           }`}
         >
           {isSelected && <Check size={12} className="text-white" />}
@@ -813,7 +813,7 @@ export default function PayrollPage() {
               key={tab}
               className={`pb-2 transition-colors duration-200 ${
                 activeTab === tab
-                  ? "text-blue-600 border-b-2 border-blue-600 font-medium"
+                  ? "text-black border-b-2 border-black font-medium"
                   : "text-gray-500 hover:text-gray-700"
               }`}
               onClick={() => setActiveTab(tab)}
@@ -836,8 +836,8 @@ export default function PayrollPage() {
                 <h3 className="text-gray-500 text-sm font-medium">
                   Next Payroll
                 </h3>
-                <span className="p-2 bg-blue-100 rounded-full">
-                  <Calendar size={16} className="text-blue-600" />
+                <span className="p-2 bg-gray-100 rounded-full">
+                  <Calendar size={16} className="text-black" />
                 </span>
               </div>
               <div className="space-y-1">
@@ -936,7 +936,7 @@ export default function PayrollPage() {
                 <button
                   className={`px-3 py-2 ${
                     viewMode === "list"
-                      ? "bg-blue-50 text-blue-600"
+                      ? "bg-gray-50 text-black"
                       : "bg-white text-gray-500"
                   }`}
                   onClick={() => setViewMode("list")}
@@ -952,7 +952,7 @@ export default function PayrollPage() {
               </div>
               <input
                 type="text"
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-72 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 placeholder="Search payment history..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1016,7 +1016,7 @@ export default function PayrollPage() {
                               ? "bg-green-100 text-green-800"
                               : payroll.payrollStatus === "Failed"
                               ? "bg-red-100 text-red-800"
-                              : "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {payroll.payrollStatus}
@@ -1054,13 +1054,13 @@ export default function PayrollPage() {
               Payment Schedule Settings
             </h2>
 
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-lg">
+            <div className="bg-gray-50 border-l-4 border-black p-4 mb-8 rounded-r-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <Clock className="h-5 w-5 text-blue-500" />
+                  <Clock className="h-5 w-5 text-black" />
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-gray-700">
                     Changes to the payment schedule will be applied starting
                     from the next payment cycle. Current scheduled payments will
                     not be affected.
@@ -1122,7 +1122,7 @@ export default function PayrollPage() {
                         type="radio"
                         checked={paymentDay === "Specific date"}
                         onChange={() => setPaymentDay("Specific date")}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-black focus:ring-black focus:border-gray-300 rounded"
                       />
                       <label
                         htmlFor="specific-date"
@@ -1133,7 +1133,7 @@ export default function PayrollPage() {
 
                       {paymentDay === "Specific date" && (
                         <select
-                          className="ml-2 rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                          className="ml-2 rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-black focus:outline-none focus:ring-black"
                           value={specificDate}
                           onChange={(e) =>
                             setSpecificDate(parseInt(e.target.value))
@@ -1152,7 +1152,7 @@ export default function PayrollPage() {
 
                 {paymentInterval === "Weekly" && (
                   <select
-                    className="rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                    className="rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-black focus:outline-none focus:ring-black"
                     value={selectedWeeklyDay}
                     onChange={(e) => setSelectedWeeklyDay(e.target.value)}
                   >
@@ -1180,7 +1180,7 @@ export default function PayrollPage() {
                   className={`px-4 py-2 ${
                     isUpdating
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
+                      : "bg-black hover:bg-gray-900"
                   } rounded-md text-sm font-medium text-white`}
                   onClick={handlePayrollScheduleSave}
                   disabled={isUpdating}

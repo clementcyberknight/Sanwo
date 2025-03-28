@@ -21,7 +21,7 @@ const InvestmentPageComingSoon = () => {
           <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
             <div className="relative">
               <dt>
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white">
                   <BrainCog className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
@@ -38,7 +38,7 @@ const InvestmentPageComingSoon = () => {
 
             <div className="relative">
               <dt>
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white">
                   <BarChart3 className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
@@ -54,7 +54,7 @@ const InvestmentPageComingSoon = () => {
 
             <div className="relative">
               <dt>
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white">
                   <TrendingUp className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
@@ -71,7 +71,7 @@ const InvestmentPageComingSoon = () => {
 
             <div className="relative">
               <dt>
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-red-500 text-white">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white">
                   <CalendarClock className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">

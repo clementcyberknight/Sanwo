@@ -263,7 +263,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-white to-blue-50 overflow-hidden">
+    <div className="min-h-screen flex bg-gradient-to-br from-white to-gray-50 overflow-hidden">
       <ToastContainer />
 
       <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10">
@@ -273,7 +273,7 @@ const SignupPage = () => {
               <div
                 className={`rounded-full w-8 h-8 flex items-center justify-center ${
                   step >= i
-                    ? "bg-blue-600 text-white"
+                    ? "bg-black text-white"
                     : "bg-gray-200 text-gray-500"
                 }`}
               >
@@ -282,7 +282,7 @@ const SignupPage = () => {
               {i < 3 && (
                 <div
                   className={`w-12 h-1 mx-1 ${
-                    step > i ? "bg-blue-600" : "bg-gray-200"
+                    step > i ? "bg-black" : "bg-gray-200"
                   }`}
                 ></div>
               )}
@@ -297,18 +297,17 @@ const SignupPage = () => {
           <div className="mb-8">
             <Link href="/" className="flex items-center">
               <Image
-                src="/triv.png"
+                src="/owo.png"
                 alt="Sanwó Logo"
-                width={40}
-                height={40}
+                width={140}
+                height={140}
                 className="mr-2"
               />
-              <span className="text-xl font-bold text-blue-900">Sanwó</span>
             </Link>
           </div>
 
           <div className="max-w-lg">
-            <h1 className="text-3xl font-bold text-blue-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {step === 1
                 ? "Create your account"
                 : step === 2
@@ -332,7 +331,7 @@ const SignupPage = () => {
                     </label>
                     <input
                       type="email"
-                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -349,7 +348,7 @@ const SignupPage = () => {
                     </label>
                     <input
                       type="password"
-                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -363,7 +362,7 @@ const SignupPage = () => {
 
                   <button
                     onClick={handleNext}
-                    className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    className="w-full py-3 rounded-lg bg-black text-white hover:bg-gray-900 transition-colors flex items-center justify-center"
                   >
                     <span>Continue</span>
                     <ChevronRight className="ml-2 h-4 w-4" />
@@ -382,7 +381,7 @@ const SignupPage = () => {
                       <input
                         ref={formRefs.companyName}
                         type="text"
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                         placeholder="Enter your company name"
                       />
                       {formErrors.companyName && (
@@ -402,7 +401,7 @@ const SignupPage = () => {
                       <input
                         ref={formRefs.companyWebsite}
                         type="url"
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                         placeholder="https://yourcompany.com"
                       />
                       {formErrors.companyWebsite && (
@@ -421,7 +420,7 @@ const SignupPage = () => {
                       <Users className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                       <select
                         ref={formRefs.companySize}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent appearance-none"
                       >
                         <option value="">Select company size</option>
                         <option value="1-10">1-10 employees</option>
@@ -446,7 +445,7 @@ const SignupPage = () => {
                       <Briefcase className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                       <select
                         ref={formRefs.industry}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent appearance-none"
                       >
                         <option value="">Select industry</option>
                         <option value="defi">DeFi</option>
@@ -468,7 +467,7 @@ const SignupPage = () => {
                   </div>
                   <button
                     onClick={handleNext}
-                    className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    className="w-full py-3 rounded-lg bg-black text-white hover:bg-gray-900 transition-colors flex items-center justify-center"
                   >
                     <span>Continue</span>
                     <ChevronRight className="ml-2 h-4 w-4" />
@@ -483,7 +482,7 @@ const SignupPage = () => {
                       Payroll Frequency
                     </label>
                     <select
-                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent appearance-none"
                       value={payrollDetails.payrollFrequency}
                       onChange={(e) =>
                         setPayrollDetails({
@@ -504,7 +503,7 @@ const SignupPage = () => {
                       Monthly Transaction Volume
                     </label>
                     <select
-                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                      className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent appearance-none"
                       value={payrollDetails.monthlyTransactionVolume}
                       onChange={(e) =>
                         setPayrollDetails({
@@ -561,7 +560,7 @@ const SignupPage = () => {
                               payrollDetails.featuresOfInterest.includes(
                                 feature.id
                               )
-                                ? "bg-blue-600 border-blue-600"
+                                ? "bg-black border-black"
                                 : "border-gray-300"
                             }`}
                           >
@@ -593,7 +592,7 @@ const SignupPage = () => {
                               key={connector.uid}
                               onClick={() => connect({ connector })}
                               disabled={isPending}
-                              className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white flex items-center justify-center"
+                              className="w-full py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors duration-200 text-white flex items-center justify-center"
                             >
                               {isPending ? (
                                 <>
@@ -627,7 +626,7 @@ const SignupPage = () => {
                   <button
                     onClick={handleCreateAccount}
                     disabled={isLoading || !address}
-                    className={`w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white flex items-center justify-center ${
+                    className={`w-full py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors duration-200 text-white flex items-center justify-center ${
                       isLoading || !address
                         ? "opacity-50 cursor-not-allowed"
                         : ""
@@ -647,11 +646,11 @@ const SignupPage = () => {
 
               <p className="text-sm text-gray-600 mt-4">
                 By creating an account, you agree to our{" "}
-                <Link href="/terms" className="text-blue-600 hover:underline">
+                <Link href="/terms" className="text-black hover:underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-blue-600 hover:underline">
+                <Link href="/privacy" className="text-black hover:underline">
                   Privacy Policy
                 </Link>
               </p>
@@ -660,7 +659,7 @@ const SignupPage = () => {
         </div>
 
         {/* Right Section - Feature Showcase */}
-        <div className="w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-10 flex flex-col justify-between">
+        <div className="w-1/2 bg-gradient-to-br from-gray-900 to-gray-800 p-10 flex flex-col justify-between">
           <div className="text-white">
             <h2 className="text-3xl font-semibold mb-4">
               The simplest way to manage your workforce payroll
@@ -703,7 +702,7 @@ const SignupPage = () => {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-white/20 border-2 border-blue-600 flex items-center justify-center text-xs text-white"
+                    className="w-8 h-8 rounded-full bg-white/20 border-2 border-gray-700 flex items-center justify-center text-xs text-white"
                   >
                     {i}
                   </div>

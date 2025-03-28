@@ -359,7 +359,7 @@ export default function Dashboard() {
       <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
-            <Icon className="w-5 h-5 text-blue-600" />
+            <Icon className="w-5 h-5 text-black" />
             <span className="text-sm font-medium text-gray-600">{title}</span>
           </div>
         </div>
@@ -382,7 +382,7 @@ export default function Dashboard() {
             </div>
           )}
           {dateString && (
-            <div className="text-sm text-blue-600 mt-1">{dateString}</div>
+            <div className="text-sm text-black mt-1">{dateString}</div>
           )}
         </div>
       </div>
@@ -391,7 +391,7 @@ export default function Dashboard() {
 
   const TimeRangeDropdown = () => (
     <select
-      className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+      className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-700"
       value={timeRange}
       onChange={(e) => setTimeRange(e.target.value)}
     >
@@ -447,7 +447,7 @@ export default function Dashboard() {
               <input
                 type="text"
                 placeholder="Search transactions..."
-                className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-gray-700"
+                className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 w-64 text-gray-700"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -569,7 +569,7 @@ export default function Dashboard() {
                             className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                             ${
                               transaction.category === "Payroll"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-gray-100 text-gray-800"
                                 : transaction.category === "Bonus"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-purple-100 text-purple-800"
@@ -595,7 +595,7 @@ export default function Dashboard() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <button
                             onClick={() => handleShowMore(transaction)}
-                            className="text-blue-600 hover:text-blue-900 focus:outline-none transition-colors duration-200"
+                            className="text-black hover:text-gray-900 focus:outline-none transition-colors duration-200"
                           >
                             View Details
                           </button>
@@ -662,7 +662,7 @@ export default function Dashboard() {
                   className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                   ${
                     selectedTransaction.category === "Payroll"
-                      ? "bg-blue-100 text-blue-800"
+                      ? "bg-gray-100 text-gray-800"
                       : selectedTransaction.category === "Bonus"
                       ? "bg-green-100 text-green-800"
                       : "bg-purple-100 text-purple-800"

@@ -568,7 +568,7 @@ const FinancialReportingPage = () => {
             onClick={() => setActiveTab("financial-report")}
             className={`flex items-center gap-2 py-4 px-6 font-medium transition-colors ${
               activeTab === "financial-report"
-                ? "border-b-2 border-blue-600 text-blue-600"
+                ? "border-b-2 border-black text-black"
                 : "text-gray-500 hover:text-gray-700"
             } focus:outline-none`}
           >
@@ -579,7 +579,7 @@ const FinancialReportingPage = () => {
             onClick={() => setActiveTab("financial-statement")}
             className={`flex items-center gap-2 py-4 px-6 font-medium transition-colors ${
               activeTab === "financial-statement"
-                ? "border-b-2 border-blue-600 text-blue-600"
+                ? "border-b-2 border-black text-black"
                 : "text-gray-500 hover:text-gray-700"
             } focus:outline-none`}
           >
@@ -590,13 +590,13 @@ const FinancialReportingPage = () => {
             onClick={() => setActiveTab("tax-filing")}
             className={`flex items-center gap-2 py-4 px-6 font-medium transition-colors ${
               activeTab === "tax-filing"
-                ? "border-b-2 border-blue-600 text-blue-600"
+                ? "border-b-2 border-black text-black"
                 : "text-gray-500 hover:text-gray-700"
             } focus:outline-none`}
           >
             <Clock size={18} />
             Tax Filing{" "}
-            <span className="ml-1 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+            <span className="ml-1 text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full">
               Soon
             </span>
           </button>
@@ -625,7 +625,7 @@ const FinancialReportingPage = () => {
                       type="date"
                       value={dateRange.startDate.toISOString().split("T")[0]}
                       onChange={(e) => handleDateRangeChange(e, "startDate")}
-                      className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                     />
                   </div>
                   <div>
@@ -636,14 +636,14 @@ const FinancialReportingPage = () => {
                       type="date"
                       value={dateRange.endDate.toISOString().split("T")[0]}
                       onChange={(e) => handleDateRangeChange(e, "endDate")}
-                      className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                     />
                   </div>
                 </div>
                 <button
                   onClick={handleGenerateReport}
                   disabled={isGeneratingReport}
-                  className={`flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+                  className={`flex items-center justify-center gap-2 px-6 py-2.5 bg-black text-white rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors ${
                     isGeneratingReport ? "opacity-70 cursor-wait" : ""
                   }`}
                 >
@@ -673,14 +673,11 @@ const FinancialReportingPage = () => {
                   className="bg-white rounded-lg shadow-md border border-gray-200"
                 >
                   {/* Report Header */}
-                  <div className="bg-gradient-to-r from-blue-50 to-white p-6 border-b border-gray-200 rounded-t-lg">
+                  <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200 rounded-t-lg">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                       <div>
                         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <FileSpreadsheet
-                            size={24}
-                            className="text-blue-600"
-                          />
+                          <FileSpreadsheet size={24} className="text-black" />
                           {financialReportData.reportTitle}
                         </h2>
                         <p className="text-gray-600 mt-1">
@@ -702,7 +699,7 @@ const FinancialReportingPage = () => {
                             /\//g,
                             "-"
                           )}.pdf`}
-                          className="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          className="flex items-center gap-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900 transition-colors"
                         >
                           {({ loading }) => (
                             <>
@@ -721,8 +718,8 @@ const FinancialReportingPage = () => {
 
                   {/* Key Metrics Overview */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b border-gray-200 bg-white">
-                    <div className="bg-blue-50 rounded-lg p-4 flex items-center">
-                      <DollarSign size={32} className="text-blue-600 mr-3" />
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <DollarSign size={32} className="text-black mr-3" />
                       <div>
                         <p className="text-sm text-gray-500">Total Revenue</p>
                         <p className="text-xl font-bold text-gray-800">
@@ -730,8 +727,8 @@ const FinancialReportingPage = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="bg-red-50 rounded-lg p-4 flex items-center">
-                      <TrendingUp size={32} className="text-red-600 mr-3" />
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <TrendingUp size={32} className="text-black mr-3" />
                       <div>
                         <p className="text-sm text-gray-500">Total Expenses</p>
                         <p className="text-xl font-bold text-gray-800">
@@ -739,8 +736,8 @@ const FinancialReportingPage = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4 flex items-center">
-                      <Briefcase size={32} className="text-green-600 mr-3" />
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <Briefcase size={32} className="text-black mr-3" />
                       <div>
                         <p className="text-sm text-gray-500">Net Profit</p>
                         <p className="text-xl font-bold text-gray-800">
@@ -748,8 +745,8 @@ const FinancialReportingPage = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="bg-purple-50 rounded-lg p-4 flex items-center">
-                      <BarChart2 size={32} className="text-purple-600 mr-3" />
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <BarChart2 size={32} className="text-black mr-3" />
                       <div>
                         <p className="text-sm text-gray-500">
                           Total Transactions
@@ -768,7 +765,7 @@ const FinancialReportingPage = () => {
                       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                           <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <Users size={18} className="text-blue-600" />
+                            <Users size={18} className="text-black" />
                             Payment Statistics
                           </h3>
                         </div>
@@ -808,7 +805,7 @@ const FinancialReportingPage = () => {
                       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                           <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <CreditCard size={18} className="text-blue-600" />
+                            <CreditCard size={18} className="text-black" />
                             Transaction Details
                           </h3>
                         </div>
@@ -926,7 +923,7 @@ const FinancialReportingPage = () => {
                                         tx.category === "deposit"
                                           ? "bg-green-100 text-green-800"
                                           : tx.category === "Payroll"
-                                          ? "bg-blue-100 text-blue-800"
+                                          ? "bg-gray-100 text-gray-800"
                                           : "bg-red-100 text-red-800"
                                       }`}
                                     >
@@ -1061,7 +1058,7 @@ const FinancialReportingPage = () => {
                   </p>
                   <button
                     onClick={handleGenerateReport}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                   >
                     <FileSpreadsheet size={18} className="mr-2" />
                     Generate Report
@@ -1098,7 +1095,7 @@ const FinancialReportingPage = () => {
                     type="date"
                     value={dateRange.startDate.toISOString().split("T")[0]}
                     onChange={(e) => handleDateRangeChange(e, "startDate")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -1109,7 +1106,7 @@ const FinancialReportingPage = () => {
                     type="date"
                     value={dateRange.endDate.toISOString().split("T")[0]}
                     onChange={(e) => handleDateRangeChange(e, "endDate")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -1119,7 +1116,7 @@ const FinancialReportingPage = () => {
                   <select
                     value={transactionFilters.category}
                     onChange={(e) => handleFilterChange(e, "category")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   >
                     <option value="all">All Categories</option>
                     <option value="deposit">Deposits</option>
@@ -1134,7 +1131,7 @@ const FinancialReportingPage = () => {
                   <select
                     value={transactionFilters.status}
                     onChange={(e) => handleFilterChange(e, "status")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   >
                     <option value="all">All Statuses</option>
                     <option value="Success">Successful</option>
@@ -1154,7 +1151,7 @@ const FinancialReportingPage = () => {
                     placeholder="Minimum amount"
                     value={transactionFilters.minAmount}
                     onChange={(e) => handleFilterChange(e, "minAmount")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -1166,7 +1163,7 @@ const FinancialReportingPage = () => {
                     placeholder="Maximum amount"
                     value={transactionFilters.maxAmount}
                     onChange={(e) => handleFilterChange(e, "maxAmount")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   />
                 </div>
               </div>
@@ -1174,14 +1171,14 @@ const FinancialReportingPage = () => {
               <div className="flex justify-between">
                 <button
                   onClick={resetFilters}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                 >
                   Reset Filters
                 </button>
                 <button
                   onClick={handleGenerateTransactionStatement}
                   disabled={isLoadingTransactions}
-                  className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors ${
                     isLoadingTransactions ? "opacity-70 cursor-wait" : ""
                   }`}
                 >
@@ -1211,11 +1208,11 @@ const FinancialReportingPage = () => {
                   className="bg-white rounded-lg shadow-md border border-gray-200"
                 >
                   {/* Statement Header */}
-                  <div className="bg-gradient-to-r from-blue-50 to-white p-6 border-b border-gray-200 rounded-t-lg">
+                  <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200 rounded-t-lg">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                       <div>
                         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <FileText size={24} className="text-blue-600" />
+                          <FileText size={24} className="text-black" />
                           Transaction Statement
                         </h2>
                         <p className="text-gray-600 mt-1">
@@ -1235,7 +1232,7 @@ const FinancialReportingPage = () => {
                           fileName={`Transaction-Statement-${
                             new Date().toISOString().split("T")[0]
                           }.pdf`}
-                          className="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          className="flex items-center gap-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900 transition-colors"
                         >
                           {({ loading }) => (
                             <>
@@ -1266,13 +1263,13 @@ const FinancialReportingPage = () => {
                           {transactionData.summary.totalTransactions}
                         </p>
                       </div>
-                      <div className="bg-green-50 rounded-lg p-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
                         <p className="text-sm text-gray-500">Total Deposits</p>
                         <p className="text-xl font-bold text-gray-800">
                           {transactionData.summary.totalDeposits}
                         </p>
                       </div>
-                      <div className="bg-red-50 rounded-lg p-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
                         <p className="text-sm text-gray-500">
                           Total Withdrawals
                         </p>
@@ -1293,10 +1290,7 @@ const FinancialReportingPage = () => {
                       ([month, transactions]) => (
                         <div key={month} className="mb-6">
                           <h4 className="text-md font-medium text-gray-700 mb-2 flex items-center">
-                            <Calendar
-                              size={16}
-                              className="mr-2 text-blue-600"
-                            />
+                            <Calendar size={16} className="mr-2 text-black" />
                             {month}
                           </h4>
                           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -1416,7 +1410,7 @@ const FinancialReportingPage = () => {
                 >
                   <Loader2
                     size={48}
-                    className="mx-auto mb-4 text-blue-500 animate-spin"
+                    className="mx-auto mb-4 text-gray-500 animate-spin"
                   />
                   <p className="text-lg font-medium text-gray-700">
                     Loading transaction data...
@@ -1443,7 +1437,7 @@ const FinancialReportingPage = () => {
                   </p>
                   <button
                     onClick={handleGenerateTransactionStatement}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                   >
                     <FileText size={18} className="mr-2" />
                     Generate Statement

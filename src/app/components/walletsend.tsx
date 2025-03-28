@@ -303,19 +303,13 @@ const WalletSendModal = ({ isOpen, onClose }) => {
     }
   };
 
-  //beautiful girls by sean kingstons
-  //nice song
-  // listen to it when working on this code
-
-  // FUCK YOU AND YOUR FUCKING SEAN KINGSTONS.
-
   return (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex items-center justify-center"
+            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-50 flex items-center justify-center" // Increased opacity for darker backdrop
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -330,9 +324,9 @@ const WalletSendModal = ({ isOpen, onClose }) => {
             }}
           />
 
-          {/* Modal Content - Positioned to the left */}
+          {/* Modal Content - Darker background and white text */}
           <motion.div
-            className="relative bg-white rounded-2xl shadow-lg p-10 max-w-4xl z-50 overflow-hidden"
+            className="relative bg-gray-900 text-white rounded-2xl shadow-lg p-10 max-w-4xl z-50 overflow-hidden" // Dark gray background and white text
             variants={modalVariants}
             initial="hidden"
             animate="visible"
@@ -347,30 +341,30 @@ const WalletSendModal = ({ isOpen, onClose }) => {
               maxWidth: "800px",
             }}
           >
-            {/* Close Button */}
+            {/* Close Button - White color for visibility */}
             <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none" // White close button
               onClick={onClose}
               aria-label="Close"
             >
               <XCircle size={24} />
             </button>
 
-            <h2 className="text-3xl font-semibold text-blue-800 mb-8">
+            <h2 className="text-3xl font-semibold text-white mb-8">
               Send Crypto
             </h2>
 
-            {/* Add Category Selection Dropdown */}
+            {/* Add Category Selection Dropdown - Styles adjusted for dark theme */}
             <div className="mb-6">
               <label
                 htmlFor="withdrawalCategory"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
               >
                 Payment Category:
               </label>
               <select
                 id="withdrawalCategory"
-                className="shadow border rounded w-full py-3 px-4 text-gray-700 bg-white focus:outline-none focus:shadow-outline"
+                className="shadow border rounded w-full py-3 px-4 text-gray-300 bg-gray-800 focus:outline-none focus:shadow-outline" // Adjusted input styles for dark theme
                 value={withdrawalCategory}
                 onChange={(e) => setWithdrawalCategory(e.target.value)}
               >
@@ -382,18 +376,19 @@ const WalletSendModal = ({ isOpen, onClose }) => {
               </select>
             </div>
 
-            {/* Recipient Wallet Address Input */}
+            {/* Recipient Wallet Address Input - Styles adjusted for dark theme */}
             <div className="mb-6">
               <label
                 htmlFor="recipientAddress"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
               >
                 Recipient Wallet Address:
               </label>
               <input
                 type="text"
                 id="recipientAddress"
-                className={`shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                className={`shadow appearance-none border rounded w-full py-3 px-4 text-gray-300 leading-tight focus:outline-none focus:shadow-outline bg-gray-800 ${
+                  // Adjusted input styles for dark theme
                   !isAddressValid ? "border-red-500" : ""
                 }`}
                 placeholder="Enter wallet address (0x...)"
@@ -407,11 +402,11 @@ const WalletSendModal = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            {/* Token Selection */}
+            {/* Token Selection - White text for labels */}
             <div className="mb-6">
               <label
                 htmlFor="tokenSelect"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
               >
                 Select Token:
               </label>
@@ -419,7 +414,7 @@ const WalletSendModal = ({ isOpen, onClose }) => {
                 {["USDC", "ETH", "USDT"].map((token) => (
                   <label
                     key={token}
-                    className="inline-flex items-center text-lg"
+                    className="inline-flex items-center text-lg text-white" // White text for token labels
                   >
                     <input
                       type="radio"
@@ -428,40 +423,40 @@ const WalletSendModal = ({ isOpen, onClose }) => {
                       checked={selectedToken === token}
                       onChange={() => setSelectedToken(token)}
                     />
-                    <span className="ml-3 text-gray-700">{token}</span>
+                    <span className="ml-3 text-gray-300">{token}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Amount Input */}
+            {/* Amount Input - Styles adjusted for dark theme */}
             <div className="mb-8">
               <label
                 htmlFor="sendAmount"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
               >
                 Amount:
               </label>
               <input
                 type="number"
                 id="sendAmount"
-                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-300 leading-tight focus:outline-none focus:shadow-outline bg-gray-800" // Adjusted input styles for dark theme
                 placeholder="Enter amount to send"
                 value={sendAmount}
                 onChange={(e) => setSendAmount(e.target.value)}
               />
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Adjusted button styles for dark theme */}
             <div className="flex justify-end space-x-6">
               <button
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors text-lg"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors text-lg" // Darker button background
                 onClick={onClose}
               >
                 Cancel
               </button>
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center space-x-3 text-lg"
+                className="bg-black hover:bg-gray-900 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center space-x-3 text-lg" // Black send button
                 onClick={handleSend}
                 disabled={!isAddressValid || !sendAmount || !recipientAddress}
               >

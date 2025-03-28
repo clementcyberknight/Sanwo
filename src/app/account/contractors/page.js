@@ -808,7 +808,7 @@ export default function ContractorPage() {
 
   const ContractorSelect = ({ contractors, value, onChange }) => (
     <select
-      className="mt-1 block w-full pl-3 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+      className="mt-1 block w-full pl-3 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -924,7 +924,7 @@ export default function ContractorPage() {
                 key={tab}
                 className={`pb-2 transition-colors duration-200 ${
                   activeTab === tab
-                    ? "text-blue-600 border-b-2 border-blue-600 font-medium"
+                    ? "text-black border-b-2 border-black font-medium"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
                 onClick={() => setActiveTab(tab)}
@@ -964,7 +964,7 @@ export default function ContractorPage() {
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-4">
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700"
+                    className="px-4 py-2 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-900"
                     onClick={() => setActiveTab("INVITE CONTRACTOR")}
                   >
                     <UserPlus size={16} />
@@ -980,7 +980,7 @@ export default function ContractorPage() {
                 </div>
                 <input
                   type="text"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   placeholder="Search contractors..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -1050,7 +1050,7 @@ export default function ContractorPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-blue-600">
+                            <span className="text-sm text-black">
                               {contractor.role}
                             </span>
                           </td>
@@ -1107,15 +1107,15 @@ export default function ContractorPage() {
           {activeTab === "INVITE CONTRACTOR" && (
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <h2 className="text-xl font-semibold mb-4">Invite Contractor</h2>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+              <div className="bg-gray-50 border-l-4 border-gray-500 p-4 mb-6 rounded-r-lg">
                 <div className="flex">
-                  <Clock size={20} className="text-blue-500 mr-3" />
+                  <Clock size={20} className="text-gray-500 mr-3" />
                   <div>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-gray-700">
                       Use this page to invite contractors by sending them a
                       secure email containing wallet connection details.
                     </p>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-gray-700">
                       This is crucial for facilitating secure and streamlined
                       (Web3) payment transactions.
                     </p>
@@ -1132,7 +1132,7 @@ export default function ContractorPage() {
                     </label>
                     <input
                       type="text"
-                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                       value={contractorName}
                       onChange={(e) => setContractorName(e.target.value)}
                     />
@@ -1143,7 +1143,7 @@ export default function ContractorPage() {
                     </label>
                     <input
                       type="email"
-                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                       value={contractorEmail}
                       onChange={(e) => setContractorEmail(e.target.value)}
                     />
@@ -1157,7 +1157,7 @@ export default function ContractorPage() {
                       Role
                     </label>
                     <select
-                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                       value={contractorRole}
                       onChange={(e) => setContractorRole(e.target.value)}
                     >
@@ -1180,7 +1180,7 @@ export default function ContractorPage() {
                       </div>
                       <input
                         type="text"
-                        className="mt-1 block w-full pl-7 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                        className="mt-1 block w-full pl-7 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                         value={contractorPayment}
                         onChange={(e) => setContractorPayment(e.target.value)}
                       />
@@ -1193,7 +1193,7 @@ export default function ContractorPage() {
                     Note
                   </label>
                   <textarea
-                    className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                    className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                     placeholder="Add any additional information about this contractor"
                     value={contractorNote}
                     onChange={(e) => setContractorNote(e.target.value)}
@@ -1210,7 +1210,7 @@ export default function ContractorPage() {
                     Cancel
                   </button>
                   <button
-                    className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700"
+                    className="px-4 py-2 bg-black rounded-md text-sm font-medium text-white hover:bg-gray-900"
                     onClick={handleAddContractor}
                   >
                     Invite Contractor
@@ -1224,10 +1224,10 @@ export default function ContractorPage() {
           {activeTab === "PAY CONTRACTOR" && (
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <h2 className="text-xl font-semibold mb-4">Pay Contractor</h2>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+              <div className="bg-gray-50 border-l-4 border-gray-500 p-4 mb-6 rounded-r-lg">
                 <div className="flex items-center">
-                  <DollarSign size={20} className="text-blue-500 mr-3" />
-                  <p className="text-sm text-blue-700">
+                  <DollarSign size={20} className="text-gray-500 mr-3" />
+                  <p className="text-sm text-gray-700">
                     Select a contractor to initiate a payment.
                   </p>
                 </div>
@@ -1256,7 +1256,7 @@ export default function ContractorPage() {
                       </div>
                       <input
                         type="text"
-                        className="mt-1 block w-full pl-7 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                        className="mt-1 block w-full pl-7 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                         value={
                           contractors.find(
                             (contractor) =>
@@ -1277,7 +1277,7 @@ export default function ContractorPage() {
                     Cancel
                   </button>
                   <button
-                    className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700"
+                    className="px-4 py-2 bg-black rounded-md text-sm font-medium text-white hover:bg-gray-900"
                     onClick={handleConfirmPayment}
                     disabled={!paymentContractor} // Disable if no contractor is selected
                   >
@@ -1413,7 +1413,7 @@ export default function ContractorPage() {
                         Note
                       </label>
                       <textarea
-                        className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                        className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 text-base"
                         placeholder="Add any additional information about this contractor"
                         value={editFormData.invitation_note}
                         onChange={(e) =>
@@ -1445,7 +1445,7 @@ export default function ContractorPage() {
                       </button>
                       <button
                         onClick={handleEditSubmit}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900"
                       >
                         Save Changes
                       </button>

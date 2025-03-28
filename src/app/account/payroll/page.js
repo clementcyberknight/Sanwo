@@ -597,7 +597,7 @@ export default function PayrollPage() {
               key={tab}
               className={`pb-2 transition-colors duration-200 ${
                 activeTab === tab
-                  ? "text-blue-600 border-b-2 border-blue-600 font-medium"
+                  ? "text-black border-b-2 border-black font-medium"
                   : "text-gray-500 hover:text-gray-700"
               }`}
               onClick={() => setActiveTab(tab)}
@@ -627,7 +627,7 @@ export default function PayrollPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700"
+                    className="px-4 py-2 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-900"
                     onClick={() => setActiveTab("INVITE WORKER")}
                     disabled={isLoadingAccount}
                   >
@@ -642,7 +642,7 @@ export default function PayrollPage() {
                   </div>
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                     placeholder="Search workers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -700,7 +700,7 @@ export default function PayrollPage() {
                                   ? "text-red-600"
                                   : worker.role === "Manager"
                                   ? "text-green-600"
-                                  : "text-blue-600"
+                                  : "text-black"
                               }`}
                             >
                               {worker.role}
@@ -738,11 +738,11 @@ export default function PayrollPage() {
           {activeTab === "INVITE WORKER" && (
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <h2 className="text-xl font-semibold mb-4">Invite Worker</h2>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+              <div className="bg-gray-50 border-l-4 border-gray-500 p-4 mb-6 rounded-r-lg">
                 <div className="flex">
                   <div className="flex-shrink-0"></div>
                   <div className="ml-3">
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-gray-700">
                       Use this page to invite workers by sending them a secure
                       email containing wallet connection details.
                     </p>
@@ -757,7 +757,7 @@ export default function PayrollPage() {
                     </label>
                     <input
                       type="text"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
                       value={workerName}
                       onChange={(e) => setWorkerName(e.target.value)}
                     />
@@ -768,7 +768,7 @@ export default function PayrollPage() {
                     </label>
                     <input
                       type="email"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
                       value={workerEmail}
                       onChange={(e) => setWorkerEmail(e.target.value)}
                     />
@@ -780,7 +780,7 @@ export default function PayrollPage() {
                       Role
                     </label>
                     <select
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
                       value={workerRole}
                       onChange={(e) => setWorkerRole(e.target.value)}
                     >
@@ -802,7 +802,7 @@ export default function PayrollPage() {
                       </div>
                       <input
                         type="text"
-                        className="mt-1 block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
                         value={workerSalary}
                         onChange={(e) => setWorkerSalary(e.target.value)}
                       />
@@ -814,7 +814,7 @@ export default function PayrollPage() {
                     Note
                   </label>
                   <textarea
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
                     value={workerNote}
                     onChange={(e) => setWorkerNote(e.target.value)}
                     rows={4}
@@ -828,7 +828,7 @@ export default function PayrollPage() {
                     Cancel
                   </button>
                   <button
-                    className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-black rounded-md text-sm font-medium text-white hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     onClick={handleAddWorker}
                     disabled={isAddingWorker}
                   >

@@ -634,7 +634,7 @@ const WalletDashboard = () => {
           >
             <motion.div variants={itemVariants} className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                <div className="p-6 bg-gradient-to-r from-gray-800 to-gray-900 text-white">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center space-x-2 relative">
                       <div
@@ -673,7 +673,7 @@ const WalletDashboard = () => {
                         ? formatCurrency(parseFloat(balance))
                         : "•••••••"}
                     </div>
-                    <div className="text-blue-100 text-sm pb-1 flex items-center">
+                    <div className="text-gray-300 text-sm pb-1 flex items-center">
                       <TrendingUp size={14} className="mr-1" />
                       +4.3% this month
                     </div>
@@ -691,7 +691,7 @@ const WalletDashboard = () => {
                           onClick={() => setTimeRange(range)}
                           className={`px-3 py-1 text-sm rounded-md transition-colors ${
                             timeRange === range
-                              ? "bg-blue-100 text-blue-600"
+                              ? "bg-gray-100 text-gray-900"
                               : "text-gray-500 hover:bg-gray-100"
                           }`}
                         >
@@ -700,7 +700,7 @@ const WalletDashboard = () => {
                       ))}
                       <button
                         onClick={refreshWalletData}
-                        className="ml-2 p-1 text-gray-500 hover:text-blue-500 rounded-full hover:bg-gray-100 transition-colors"
+                        className="ml-2 p-1 text-gray-500 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
                       >
                         <RefreshCw
                           size={16}
@@ -728,12 +728,12 @@ const WalletDashboard = () => {
                           >
                             <stop
                               offset="5%"
-                              stopColor="#3B82F6"
+                              stopColor="#000000"
                               stopOpacity={0.3}
                             />
                             <stop
                               offset="95%"
-                              stopColor="#3B82F6"
+                              stopColor="#000000"
                               stopOpacity={0}
                             />
                           </linearGradient>
@@ -754,7 +754,7 @@ const WalletDashboard = () => {
                         <Area
                           type="monotone"
                           dataKey="value"
-                          stroke="#3B82F6"
+                          stroke="#000000"
                           strokeWidth={2}
                           fill="url(#colorValue)"
                           activeDot={{
@@ -771,7 +771,7 @@ const WalletDashboard = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center space-x-2 bg-blue-600 text-white font-medium py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                    className="flex items-center justify-center space-x-2 bg-black text-white font-medium py-3 px-4 rounded-xl hover:bg-gray-900 transition-colors shadow-sm"
                     onClick={openSendModal}
                   >
                     <ArrowUpRight size={18} />
@@ -780,7 +780,7 @@ const WalletDashboard = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center space-x-2 bg-white text-blue-600 font-medium py-3 px-4 rounded-xl border border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex items-center justify-center space-x-2 bg-white text-black font-medium py-3 px-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
                     onClick={openDepositModal}
                   >
                     <ArrowDownLeft size={18} />
@@ -805,7 +805,7 @@ const WalletDashboard = () => {
                       <input
                         type="text"
                         placeholder="Search transactions..."
-                        className="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        className="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
@@ -818,7 +818,7 @@ const WalletDashboard = () => {
                       onClick={() => setActiveTab("all")}
                       className={`pb-3 px-1 text-sm font-medium ${
                         activeTab === "all"
-                          ? "text-blue-600 border-b-2 border-blue-600"
+                          ? "text-black border-b-2 border-black"
                           : "text-gray-500 hover:text-gray-700"
                       }`}
                     >
@@ -828,7 +828,7 @@ const WalletDashboard = () => {
                       onClick={() => setActiveTab("received")}
                       className={`pb-3 px-1 text-sm font-medium ${
                         activeTab === "received"
-                          ? "text-blue-600 border-b-2 border-blue-600"
+                          ? "text-black border-b-2 border-black"
                           : "text-gray-500 hover:text-gray-700"
                       }`}
                     >
@@ -838,7 +838,7 @@ const WalletDashboard = () => {
                       onClick={() => setActiveTab("sent")}
                       className={`pb-3 px-1 text-sm font-medium ${
                         activeTab === "sent"
-                          ? "text-blue-600 border-b-2 border-blue-600"
+                          ? "text-black border-b-2 border-black"
                           : "text-gray-500 hover:text-gray-700"
                       }`}
                     >

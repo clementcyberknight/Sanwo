@@ -260,7 +260,7 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex items-center justify-center"
+            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-50 flex items-center justify-center" //Darker opacity for backdrop
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -275,9 +275,9 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
             }}
           />
 
-          {/* Modal Content - Positioned to the left */}
+          {/* Modal Content - Black background and white text */}
           <motion.div
-            className="relative bg-white rounded-2xl shadow-lg p-10 max-w-4xl z-50 overflow-hidden"
+            className="relative bg-gray-900 text-white rounded-2xl shadow-lg p-10 max-w-4xl z-50 overflow-hidden" // Dark background and white text
             variants={modalVariants}
             initial="hidden"
             animate="visible"
@@ -292,30 +292,30 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
               maxWidth: "800px",
             }}
           >
-            {/* Close Button */}
+            {/* Close Button - White color for visibility */}
             <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none" //White close button
               onClick={onClose}
               aria-label="Close"
             >
               <XCircle size={24} />
             </button>
 
-            <h2 className="text-3xl font-semibold text-blue-800 mb-8">
+            <h2 className="text-3xl font-semibold text-white mb-8">
               Deposit Crypto
             </h2>
 
-            {/* Category Selection Dropdown */}
+            {/* Category Selection Dropdown - Adjusted styles for dark background */}
             <div className="mb-6">
               <label
                 htmlFor="depositCategory"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label text
               >
                 Deposit Category:
               </label>
               <select
                 id="depositCategory"
-                className="shadow border rounded w-full py-3 px-4 text-gray-700 bg-white focus:outline-none focus:shadow-outline"
+                className="shadow border rounded w-full py-3 px-4 text-gray-300 bg-gray-800 focus:outline-none focus:shadow-outline" // Adjusted input styles for dark theme
                 value={depositCategory}
                 onChange={(e) => setDepositCategory(e.target.value)}
               >
@@ -328,29 +328,29 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
               </select>
             </div>
 
-            {/* Amount Input */}
+            {/* Amount Input - Adjusted styles for dark background */}
             <div className="mb-6">
               <label
                 htmlFor="depositAmount"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label text
               >
                 Amount:
               </label>
               <input
                 type="number"
                 id="depositAmount"
-                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-300 leading-tight focus:outline-none focus:shadow-outline bg-gray-800" // Adjusted input styles for dark theme
                 placeholder="Enter amount"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
               />
             </div>
 
-            {/* Token Selection */}
+            {/* Token Selection - White text for labels */}
             <div className="mb-8">
               <label
                 htmlFor="tokenSelect"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label text
               >
                 Select Token:
               </label>
@@ -358,7 +358,7 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
                 {["USDC", "ETH", "USDT"].map((token) => (
                   <label
                     key={token}
-                    className="inline-flex items-center text-lg"
+                    className="inline-flex items-center text-lg text-white" // White text for token labels
                   >
                     <input
                       type="radio"
@@ -367,22 +367,22 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
                       checked={selectedToken === token}
                       onChange={() => setSelectedToken(token)}
                     />
-                    <span className="ml-3 text-gray-700">{token}</span>
+                    <span className="ml-3 text-gray-300">{token}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Adjusted button styles for dark theme */}
             <div className="flex justify-end space-x-6">
               <button
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors text-lg"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors text-lg" // Darker button background
                 onClick={onClose}
               >
                 Cancel
               </button>
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center space-x-3 text-lg"
+                className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center space-x-3 text-lg" // Adjusted blue button style
                 onClick={handleDeposit}
                 disabled={!depositAmount}
               >

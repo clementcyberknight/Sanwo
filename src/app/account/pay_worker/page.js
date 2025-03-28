@@ -339,7 +339,7 @@ const MassPayrollPayment = () => {
     >
       {!isAuthReady ? (
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
         </div>
       ) : (
         <>
@@ -358,7 +358,7 @@ const MassPayrollPayment = () => {
               <input
                 type="text"
                 placeholder="Search workers"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
@@ -366,7 +366,7 @@ const MassPayrollPayment = () => {
               {paymentSummary != null ? (
                 isProcessing ? (
                   <button
-                    className="bg-blue-500 text-white rounded-lg py-3 px-6 flex items-center justify-center"
+                    className="bg-gray-500 text-white rounded-lg py-3 px-6 flex items-center justify-center"
                     disabled
                   >
                     <Loader2 size={20} className="mr-2 animate-spin" />{" "}
@@ -376,10 +376,10 @@ const MassPayrollPayment = () => {
                   <button
                     onClick={handlePayAll}
                     disabled={!anySelected || allPaid || isLoading}
-                    className={`bg-blue-600 text-white rounded-lg py-3 px-6 flex items-center justify-center ${
+                    className={`bg-black text-white rounded-lg py-3 px-6 flex items-center justify-center ${
                       !anySelected || allPaid || isLoading
                         ? "opacity-50 cursor-not-allowed"
-                        : "hover:bg-blue-700 transition-colors"
+                        : "hover:bg-gray-900 transition-colors"
                     }`}
                   >
                     <Send size={20} className="mr-2" /> Pay Selected:{" "}
@@ -388,7 +388,7 @@ const MassPayrollPayment = () => {
                 )
               ) : (
                 <button
-                  className="bg-white text-blue-600 rounded-lg py-3 px-6 flex items-center justify-center"
+                  className="bg-white text-gray-600 rounded-lg py-3 px-6 flex items-center justify-center"
                   disabled
                 >
                   Select workers and pay the bill
@@ -407,7 +407,7 @@ const MassPayrollPayment = () => {
                       <input
                         type="checkbox"
                         disabled={allPaid}
-                        className="rounded text-blue-500 focus:ring-blue-500 h-5 w-5"
+                        className="rounded text-gray-500 focus:ring-gray-500 h-5 w-5"
                         checked={areAllDisplayedWorkersSelected()}
                         onChange={() => setSelectAll(!selectAll)}
                       />
@@ -445,7 +445,7 @@ const MassPayrollPayment = () => {
                           <input
                             type="checkbox"
                             disabled={worker.status === "paid"}
-                            className="rounded text-blue-500 focus:ring-blue-500 h-5 w-5"
+                            className="rounded text-gray-500 focus:ring-gray-500 h-5 w-5"
                             checked={selectedWorkers.includes(worker.id)}
                             onChange={() => toggleWorkerSelection(worker.id)}
                           />

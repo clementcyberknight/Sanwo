@@ -167,7 +167,7 @@ const SigninPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-white to-blue-50 overflow-hidden">
+    <div className="min-h-screen flex bg-gradient-to-br from-white to-gray-50 overflow-hidden">
       <ToastContainer />
 
       <div className="flex w-full max-w-7xl mx-auto my-8 rounded-2xl overflow-hidden shadow-2xl">
@@ -176,18 +176,17 @@ const SigninPage = () => {
           <div className="mb-8">
             <Link href="/" className="flex items-center">
               <Image
-                src="/triv.png"
+                src="/owo.png"
                 alt="Sanwó Logo"
-                width={40}
-                height={40}
+                width={140}
+                height={140}
                 className="mr-2"
               />
-              <span className="text-xl font-bold text-blue-900">Sanwó</span>
             </Link>
           </div>
 
           <div className="max-w-lg">
-            <h1 className="text-3xl font-bold text-blue-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome back
             </h1>
             <p className="text-gray-600 mb-8">
@@ -201,7 +200,7 @@ const SigninPage = () => {
                 </label>
                 <input
                   type="email"
-                  className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -219,7 +218,7 @@ const SigninPage = () => {
                 </label>
                 <input
                   type="password"
-                  className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -234,7 +233,7 @@ const SigninPage = () => {
               <div className="flex justify-end">
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm text-black hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -250,7 +249,7 @@ const SigninPage = () => {
                           key={connector.uid}
                           onClick={() => connect({ connector })}
                           disabled={isPending}
-                          className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white flex items-center justify-center"
+                          className="w-full py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors duration-200 text-white flex items-center justify-center"
                         >
                           {isPending ? (
                             <>
@@ -284,7 +283,7 @@ const SigninPage = () => {
               <button
                 onClick={handleSignIn}
                 disabled={isLoading || !email || !password || !address}
-                className={`w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white flex items-center justify-center ${
+                className={`w-full py-3 rounded-lg bg-black hover:bg-gray-900 transition-colors duration-200 text-white flex items-center justify-center ${
                   isLoading || !email || !password || !address
                     ? "opacity-50 cursor-not-allowed"
                     : ""
@@ -308,7 +307,7 @@ const SigninPage = () => {
                   Don't have an account?{" "}
                   <Link
                     href="/auth/signup"
-                    className="text-blue-600 font-medium hover:underline"
+                    className="text-black font-medium hover:underline"
                   >
                     Create an account
                   </Link>
@@ -319,7 +318,7 @@ const SigninPage = () => {
         </div>
 
         {/* Right Section - Feature Showcase */}
-        <div className="w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-10 flex flex-col justify-between">
+        <div className="w-1/2 bg-gradient-to-br from-gray-900 to-gray-800 p-10 flex flex-col justify-between">
           <div className="text-white">
             <h2 className="text-3xl font-semibold mb-4">
               The simplest way to manage your workforce payroll
@@ -362,7 +361,7 @@ const SigninPage = () => {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-white/20 border-2 border-blue-600 flex items-center justify-center text-xs text-white"
+                    className="w-8 h-8 rounded-full bg-white/20 border-2 border-gray-700 flex items-center justify-center text-xs text-white"
                   >
                     {i}
                   </div>

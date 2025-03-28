@@ -31,17 +31,17 @@ export default function BookDemo() {
 
   const features = [
     {
-      icon: <Calendar className="w-6 h-6 text-blue-600" />,
+      icon: <Calendar className="w-6 h-6 text-black" />,
       title: "30-Min Product Tour",
       description: "Comprehensive walkthrough of Sanwó platform",
     },
     {
-      icon: <Users className="w-6 h-6 text-blue-600" />,
+      icon: <Users className="w-6 h-6 text-black" />,
       title: "Q&A Session",
       description: "Direct interaction with our product specialists",
     },
     {
-      icon: <Building className="w-6 h-6 text-blue-600" />,
+      icon: <Building className="w-6 h-6 text-black" />,
       title: "Custom Solutions",
       description: "Tailored discussion for your business needs",
     },
@@ -115,7 +115,7 @@ export default function BookDemo() {
       <div className="w-1/2 p-12 flex flex-col">
         <div className="mb-12 flex-shrink-0">
           <Link href="/" className="flex items-center">
-            <img src="/triv.png" alt="Sanwó Logo" className="w-10 h-10" />
+            <img src="/owo.png" alt="Sanwó Logo" className="w-32 h-18" />
           </Link>
         </div>
 
@@ -141,12 +141,12 @@ export default function BookDemo() {
             <div className="flex mb-12">
               <div
                 className={`h-1 w-1/2 ${
-                  step >= 1 ? "bg-blue-600" : "bg-gray-200"
+                  step >= 1 ? "bg-black" : "bg-gray-200"
                 }`}
               />
               <div
                 className={`h-1 w-1/2 ${
-                  step >= 2 ? "bg-blue-600" : "bg-gray-200"
+                  step >= 2 ? "bg-black" : "bg-gray-200"
                 }`}
               />
             </div>
@@ -163,7 +163,7 @@ export default function BookDemo() {
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="Enter your company name"
                   required
                 />
@@ -182,7 +182,7 @@ export default function BookDemo() {
                     name="companyWebsite"
                     value={formData.companyWebsite}
                     onChange={handleInputChange}
-                    className="flex-1 p-3 border border-l-0 border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 p-3 border border-l-0 border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                     placeholder="www.yourcompany.com"
                   />
                 </div>
@@ -197,7 +197,7 @@ export default function BookDemo() {
                     name="companySize"
                     value={formData.companySize}
                     onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   >
                     <option value="">Select size</option>
                     <option value="1-10">1-10 employees</option>
@@ -216,7 +216,7 @@ export default function BookDemo() {
                     name="industry"
                     value={formData.industry}
                     onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   >
                     <option value="">Select industry</option>
                     <option value="web3">Web3/Crypto</option>
@@ -237,7 +237,7 @@ export default function BookDemo() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="name@company.com"
                   required
                 />
@@ -245,7 +245,7 @@ export default function BookDemo() {
 
               <button
                 onClick={handleSubmit}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+                className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 transition duration-300 flex items-center justify-center"
               >
                 Book Your Demo
               </button>
@@ -254,11 +254,11 @@ export default function BookDemo() {
 
           <p className="text-sm text-gray-500 mt-6">
             By booking a demo, you agree to our{" "}
-            <Link href="/terms" className="text-blue-600 hover:underline">
+            <Link href="/terms" className="text-black hover:underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-blue-600 hover:underline">
+            <Link href="/privacy" className="text-black hover:underline">
               Privacy Policy
             </Link>
           </p>
@@ -295,19 +295,19 @@ export default function BookDemo() {
               </h3>
               <ul className="space-y-3">
                 <li className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
+                  <div className="w-2 h-2 bg-black rounded-full mr-3" />
                   USDC Treasury Management
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
+                  <div className="w-2 h-2 bg-black rounded-full mr-3" />
                   Automated Crypto Payroll
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
+                  <div className="w-2 h-2 bg-black rounded-full mr-3" />
                   AI-Powered Bookkeeping
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
+                  <div className="w-2 h-2 bg-black rounded-full mr-3" />
                   Compliance & Reporting
                 </li>
               </ul>
@@ -316,8 +316,8 @@ export default function BookDemo() {
         </div>
 
         <div className="mt-auto pt-12">
-          <div className="flex items-center p-4 bg-blue-50 rounded-lg">
-            <Clock className="w-5 h-5 text-blue-600 mr-3" />
+          <div className="flex items-center p-4 bg-gray-100 rounded-lg">
+            <Clock className="w-5 h-5 text-gray-700 mr-3" />
             <p className="text-sm text-gray-600">
               Average demo duration: 30 minutes
             </p>
