@@ -245,9 +245,7 @@ export default function ContractorPage() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setFirebaseUser(user);
       if (user) {
-        //User is signed in to Firebase.
         try {
-          // No JWT for now because our thirdweb sub finish, rely on Firebase and thirdweb
         } catch (error) {
           console.error("Error with Firebase Auth:", error);
           showErrorToast("Error with Firebase Authentication.");
