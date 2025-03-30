@@ -1,9 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import { ExternalProvider } from "@ethersproject/providers";
-import { MockUSDC, abi, payWorkers } from "@/sc_stylus/scabi";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { XCircle, Download } from "lucide-react";
 import {
@@ -14,7 +11,11 @@ import {
   doc,
   setDoc,
 } from "@/app/config/FirebaseConfig";
-import { useAccount } from "wagmi";
+import EmployerPool from "../../sc_/EmployeePoolAbi.json";
+import { EmployerPoolContractAddress, SanwoUtilityToken, linea_scan } from "../../sc_/utils";
+import { useAccount, useWriteContract, usePublicClient, useWalletClient } from "wagmi";
+import { parseUnits, parseAbi, formatUnits } from 'viem';
+import { lineaSepolia } from 'viem/chains';
 
 const backdropVariants = {
   hidden: { opacity: 0 },
@@ -31,228 +32,315 @@ const modalVariants = {
   exit: { y: "100vh", opacity: 0 },
 };
 
-declare global {
-  interface Window {
-    ethereum?: ExternalProvider & { request: (...args: any[]) => Promise<any> };
-  }
+const TOKEN_ABI = parseAbi([
+  "function approve(address spender, uint256 amount) external returns (bool)",
+  "function balanceOf(address account) external view returns (uint256)",
+  "function allowance(address owner, address spender) external view returns (uint256)",
+]);
+
+const EMPLOYER_POOL_ABI = EmployerPool;
+
+interface WalletDepositModalProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-//@ts-ignore
-const WalletDepositModal = ({ isOpen, onClose }) => {
+const WalletDepositModal: React.FC<WalletDepositModalProps> = ({ isOpen, onClose }) => {
   const [depositAmount, setDepositAmount] = useState("");
-  const [selectedToken, setSelectedToken] = useState("USDC"); // Default to USDC
-  const [depositCategory, setDepositCategory] = useState("revenue"); // Add this state
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<any>(null);
-  const [employerContract, setEmployerContract] = useState<any>(null);
+  const [selectedToken, setSelectedToken] = useState("USDC");
+  const [depositCategory, setDepositCategory] = useState("revenue");
+  const [txStatusMessage, setTxStatusMessage] = useState<string>("");
+  const [isDepositInitiated, setIsDepositInitiated] = useState<boolean>(false);
+
   const Account = useAccount();
   const Companyaddress = Account?.address;
+  const publicClient = usePublicClient({ chainId: lineaSepolia.id });
+  const { data: walletClient } = useWalletClient({ chainId: lineaSepolia.id });
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      const providerInstance = new ethers.BrowserProvider(
-        window.ethereum as any
-      );
-      setProvider(providerInstance);
-      providerInstance
-        .getSigner()
-        .then((s) => setSigner(s))
-        .catch((err) => console.error(err));
-    }
-  }, []);
+  const {
+    writeContract: ApproveToken,
+    isSuccess: approveSuccess,
+    isPending: approveLoading,
+    isError: approveError,
+    error: approveWriteError,
+    reset: resetApprove,
+    data: approveTxHash
+  } = useWriteContract();
 
-  useEffect(() => {
-    if (signer) {
-      const contract = new ethers.Contract(payWorkers, abi, signer);
-      setEmployerContract(contract);
-    }
-  }, [signer]);
-  const TOKEN_ABI = [
-    "function approve(address spender, uint256 amount) external returns (bool)",
-    "function balanceOf(address account) external view returns (uint256)",
-    "function allowance(address owner, address spender) external view returns (uint256)",
-  ];
+  const {
+    writeContract: depositToken,
+    isSuccess: depositSuccess,
+    isPending: depositLoading,
+    isError: depositError,
+    error: depositWriteError,
+    reset: resetDeposit,
+    data: depositTxHash,
+  } = useWriteContract();
 
-  const storeDepositTransaction = async (
+  const storeDepositTransaction = useCallback(async (
     amount: string,
     category: string,
     token: string,
-    txHash: string,
+    txHash: string | null,
     status: "Success" | "Failed",
+    txType: "deposit" | "approval",
     error?: string
   ) => {
     if (!Companyaddress) {
-      console.error("No business address found");
+      console.error("No business address found for storing transaction");
+      setTxStatusMessage("Error: Business address not found.");
       return;
     }
 
+    console.log(`Storing ${txType} transaction: Amount=${amount}, Category=${category}, Token=${token}, Hash=${txHash}, Status=${status}, Error=${error}`);
+
     try {
       const timestamp = serverTimestamp();
-      const depositId = Date.now().toString();
-      const fromAddress = await signer.getAddress();
+      const txId = Date.now().toString();
+      const fromAddress = Companyaddress;
 
-      // Add to payments collection with consistent structure
-      const paymentsRef = doc(
-        db,
-        `businesses/${Companyaddress}/payments/${depositId}`
-      );
+      const paymentId = `pay_${txId}`;
+      const paymentsRef = doc(db, `businesses/${Companyaddress}/payments/${paymentId}`);
       await setDoc(paymentsRef, {
-        amount: Number(amount),
-        depositId,
-        transactionId: depositId,
+        amount: Number(amount) || 0,
+        paymentId,
         category: "deposit",
         status: status,
-        transactionHash: txHash,
+        transactionHash: txHash ?? null,
         timestamp: timestamp,
+        type: txType,
       });
 
-      // Add to deposits collection (keeping existing structure)
-      const depositsRef = collection(
-        db,
-        `businesses/${Companyaddress}/deposits`
-      );
+      const depositId = `dep_${txId}`;
+      const depositsRef = collection(db, `businesses/${Companyaddress}/deposits`);
       await addDoc(depositsRef, {
         depositId,
         depositDate: timestamp,
-        depositAmount: Number(amount),
+        depositAmount: Number(amount) || 0,
         category,
         depositToken: token,
         businessId: Companyaddress,
         fromWalletAddress: fromAddress,
-        transactionHash: txHash,
+        transactionHash: txHash ?? null,
         depositStatus: status,
         gasFees: null,
         errorDetails: error || null,
         createdAt: timestamp,
         updatedAt: timestamp,
+        transactionType: txType,
       });
 
-      // Add to walletTransactions collection for wallet page UI
-      const walletTransactionsRef = collection(
-        db,
-        `businesses/${Companyaddress}/walletTransactions`
-      );
+      const walletTxId = `wtx_${txId}`;
+      const walletTransactionsRef = collection(db, `businesses/${Companyaddress}/walletTransactions`);
       await addDoc(walletTransactionsRef, {
-        id: depositId,
+        id: walletTxId,
         type: "deposit",
-        depositAmount: Number(amount),
+        depositAmount: Number(amount) || 0,
         depositToken: token,
         depositStatus: status,
         category: category,
-        transactionHash: txHash,
+        transactionHash: txHash ?? null,
         createdAt: timestamp,
         depositDate: timestamp,
         fromWalletAddress: fromAddress,
+        toWalletAddress: EmployerPoolContractAddress,
         errorDetails: error || null,
-        // Additional fields needed for wallet page UI
-        description: `Deposited ${amount} ${token} from ${fromAddress.substring(
-          0,
-          6
-        )}...${fromAddress.substring(38)}`,
-        toWalletAddress: Companyaddress,
+        description: `${status === 'Success' ? 'Completed' : 'Attempted'} ${txType} for ${amount} ${token} deposit. ${error ? `Error: ${error.substring(0, 50)}...` : ''}`,
         status: status,
-        amount: Number(amount),
+        amount: Number(amount) || 0,
         token: token,
-        transactionType: "deposit",
+        transactionType: txType,
         timestamp: timestamp,
-        // Fields for transaction details modal
         gasFees: null,
-        deviceInfo: {
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          language: navigator.language,
-          screenResolution: `${window.screen.width}x${window.screen.height}`,
-        },
-        // Match the structure expected by the wallet page
+        deviceInfo: { /* Consider adding useful device info if relevant */ },
         businessId: Companyaddress,
         updatedAt: timestamp,
       });
 
-      console.log("Deposit transaction stored successfully in all collections");
-    } catch (error) {
-      console.error("Error storing deposit transaction:", error);
-      throw new Error("Failed to store deposit transaction");
-    }
-  };
+      console.log(`Transaction (${txType}, Status: ${status}) stored successfully in Firestore.`);
 
-  const handleDeposit = async () => {
-    if (!signer) {
-      console.error("No signer found");
+    } catch (firestoreError) {
+      console.error(`Error storing ${txType} transaction in Firestore:`, firestoreError);
+      setTxStatusMessage(`Error saving ${txType} record to database.`);
+    }
+  }, [Companyaddress]);
+
+  const handleApprove = async () => {
+    if (!Companyaddress) {
+      setTxStatusMessage("Please connect your wallet.");
+      console.error("Account not connected");
       return;
     }
-
     if (!depositAmount || Number(depositAmount) <= 0) {
+      setTxStatusMessage("Invalid deposit amount.");
       console.error("Invalid deposit amount");
       return;
     }
+    if (selectedToken !== "USDC") {
+        setTxStatusMessage("Only USDC deposits are currently supported.");
+        console.warn("Selected token is not USDC, but proceeding with USDC logic.");
+    }
+
+    resetApprove();
+    resetDeposit();
+    setIsDepositInitiated(false);
+    setTxStatusMessage("Processing approval...");
 
     try {
-      const conv_deposit = ethers.parseUnits(depositAmount, 6);
+      const depositAmountParsed = parseUnits(depositAmount, 6);
+      const tokenAddress = SanwoUtilityToken as `0x${string}`;
+      const spenderAddress = EmployerPoolContractAddress as `0x${string}`;
 
-      // First approve the deposit
-      try {
-        const tokenContract = new ethers.Contract(MockUSDC, TOKEN_ABI, signer);
-        const approveTx = await tokenContract.approve(payWorkers, conv_deposit);
-        await approveTx.wait();
-        console.log("Deposit approved successfully");
-      } catch (error) {
-        //@ts-ignore
-        console.error("Approval failed:", error.message);
-        await storeDepositTransaction(
-          depositAmount,
-          depositCategory,
-          selectedToken,
-          "",
-          "Failed",
-          //@ts-ignore
-          "Approval failed: " + error.message
-        );
-        return;
-      }
+      console.log(`Attempting to approve ${depositAmount} USDC (${depositAmountParsed} units) for spender ${spenderAddress}`);
 
-      // Then make the deposit
-      try {
-        const tx = await employerContract.deposit(conv_deposit);
-        const receipt = await tx.wait();
+      ApproveToken({
+        chainId: lineaSepolia.id,
+        address: tokenAddress,
+        abi: TOKEN_ABI,
+        functionName: 'approve',
+        args: [spenderAddress, depositAmountParsed],
+      });
+      console.log("Approval transaction sent to wallet...");
 
-        // Store successful transaction
-        await storeDepositTransaction(
-          depositAmount,
-          depositCategory,
-          selectedToken,
-          receipt.hash,
-          "Success"
-        );
-
-        console.log(`Successfully deposited ${depositAmount} ${selectedToken}`);
-        onClose();
-      } catch (error) {
-        //@ts-ignore
-        console.error("Deposit failed:", error.message);
-        await storeDepositTransaction(
-          depositAmount,
-          depositCategory,
-          selectedToken,
-          "",
-          "Failed",
-          //@ts-ignore
-          "Deposit failed: " + error.message
-        );
-      }
-    } catch (error) {
-      //@ts-ignore
-      console.error("Transaction failed:", error.message);
+    } catch (error: any) {
+      const errorMsg = error.shortMessage || error.message || "Approval failed to initiate.";
+      console.error("Error initiating approval transaction:", error);
+      setTxStatusMessage(`Approval Error: ${errorMsg}`);
       await storeDepositTransaction(
         depositAmount,
         depositCategory,
         selectedToken,
-        "",
+        null,
         "Failed",
-        //@ts-ignore
-        "Transaction failed: " + error.message
+        "approval",
+        errorMsg
       );
+      resetApprove();
+      resetDeposit();
+      setIsDepositInitiated(false);
     }
   };
+
+  useEffect(() => {
+    const performDepositAfterApproval = async () => {
+        if (approveSuccess && !isDepositInitiated && approveTxHash) {
+            setIsDepositInitiated(true);
+            setTxStatusMessage("Approval Confirmed. Processing deposit...");
+            console.log(`Approval successful (Tx: ${approveTxHash}). Proceeding with deposit.`);
+
+            try {
+                const depositAmountParsed = parseUnits(depositAmount || '0', 6);
+
+                console.log(`Depositing ${depositAmount} USDC (${depositAmountParsed} units) into ${EmployerPoolContractAddress}`);
+
+                resetDeposit();
+
+                depositToken({
+                    chainId: lineaSepolia.id,
+                    address: EmployerPoolContractAddress as `0x${string}`,
+                    abi: EMPLOYER_POOL_ABI,
+                    functionName: 'deposit',
+                    args: [depositAmountParsed],
+                });
+
+                console.log("Deposit transaction sent to wallet...");
+
+            } catch (error: any) {
+                const errorMsg = error.shortMessage || error.message || "Deposit failed to initiate.";
+                console.error("Error initiating deposit transaction:", error);
+                setTxStatusMessage(`Deposit Error: ${errorMsg}`);
+                setIsDepositInitiated(false);
+                await storeDepositTransaction(
+                    depositAmount,
+                    depositCategory,
+                    selectedToken,
+                    approveTxHash,
+                    "Failed",
+                    "deposit",
+                    `Deposit Initiation Failed: ${errorMsg}`
+                );
+            }
+        }
+    };
+
+    performDepositAfterApproval();
+  }, [approveSuccess, approveTxHash, isDepositInitiated, depositAmount, resetDeposit, depositToken, storeDepositTransaction, depositCategory, selectedToken]);
+
+
+  useEffect(() => {
+     if (depositSuccess && depositTxHash) {
+       console.log("Deposit transaction successful! Hash:", depositTxHash);
+       setTxStatusMessage("Deposit Successful!");
+
+       storeDepositTransaction(
+         depositAmount,
+         depositCategory,
+         selectedToken,
+         depositTxHash,
+         "Success",
+         "deposit"
+       ).then(() => {
+            console.log("Deposit success stored in DB.");
+             setTimeout(() => {
+                handleClose();
+             }, 1500);
+       }).catch((dbError) => {
+            console.error("Failed to store successful deposit in DB:", dbError);
+            setTxStatusMessage("Deposit succeeded but failed to save record.");
+       });
+     }
+   }, [depositSuccess, depositTxHash, depositAmount, depositCategory, selectedToken, storeDepositTransaction]);
+
+   useEffect(() => {
+       if (approveError) {
+           const errorMsg = approveWriteError?.shortMessage || approveWriteError?.message || "Approval Transaction Failed";
+           console.error("Approval transaction failed:", approveWriteError);
+           setTxStatusMessage(`Approval Failed: ${errorMsg}`);
+           setIsDepositInitiated(false);
+           storeDepositTransaction(
+               depositAmount,
+               depositCategory,
+               selectedToken,
+               approveTxHash ?? null,
+               "Failed",
+               "approval",
+               errorMsg
+           );
+       }
+   }, [approveError, approveWriteError, depositAmount, depositCategory, selectedToken, storeDepositTransaction, approveTxHash]);
+
+   useEffect(() => {
+       if (depositError) {
+           const errorMsg = depositWriteError?.shortMessage || depositWriteError?.message || "Deposit Transaction Failed";
+           console.error("Deposit transaction failed:", depositError);
+           setTxStatusMessage(`Deposit Failed: ${errorMsg}`);
+           setIsDepositInitiated(false);
+           storeDepositTransaction(
+               depositAmount,
+               depositCategory,
+               selectedToken,
+               depositTxHash ?? approveTxHash ?? null,
+               "Failed",
+               "deposit",
+               errorMsg
+           );
+       }
+   }, [depositError, depositWriteError, depositAmount, depositCategory, selectedToken, storeDepositTransaction, depositTxHash, approveTxHash]);
+
+
+  const handleClose = () => {
+      onClose();
+      setTimeout(() => {
+          setDepositAmount("");
+          setSelectedToken("USDC");
+          setDepositCategory("revenue");
+          setTxStatusMessage("");
+          setIsDepositInitiated(false);
+          resetApprove();
+          resetDeposit();
+      }, 300);
+  };
+
 
   return (
     <AnimatePresence>
@@ -260,64 +348,48 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-50 flex items-center justify-center" //Darker opacity for backdrop
+            className="fixed inset-0 bg-black bg-opacity-70 z-50"
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
             exit="hidden"
-            onClick={onClose} // Close when clicking outside the modal
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
+            onClick={handleClose}
           />
 
-          {/* Modal Content - Black background and white text */}
           <motion.div
-            className="relative bg-gray-900 text-white rounded-2xl shadow-lg p-10 max-w-4xl z-50 overflow-hidden" // Dark background and white text
+            className="fixed top-1/2 left-1/2 bg-gray-900 text-white rounded-2xl shadow-lg p-8 max-w-xl w-11/12 z-50"
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={(e) => e.stopPropagation()} // Prevent backdrop click from closing
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "30%", // Moved left from center (was 50%)
-              transform: "translate(-50%, -50%)",
-              width: "80%",
-              maxWidth: "800px",
-            }}
+            style={{ x: "-50%", y: "-50%" }}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button - White color for visibility */}
             <button
-              className="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none" //White close button
-              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white focus:outline-none"
+              onClick={handleClose}
               aria-label="Close"
             >
               <XCircle size={24} />
             </button>
 
-            <h2 className="text-3xl font-semibold text-white mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-6">
               Deposit Crypto
             </h2>
 
-            {/* Category Selection Dropdown - Adjusted styles for dark background */}
-            <div className="mb-6">
+            <div className="mb-4">
               <label
                 htmlFor="depositCategory"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label text
+                className="block text-gray-300 text-sm font-medium mb-1"
               >
-                Deposit Category:
+                Deposit Category
               </label>
               <select
                 id="depositCategory"
-                className="shadow border rounded w-full py-3 px-4 text-gray-300 bg-gray-800 focus:outline-none focus:shadow-outline" // Adjusted input styles for dark theme
+                className="shadow-sm border border-gray-700 rounded w-full py-2 px-3 text-white bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={depositCategory}
                 onChange={(e) => setDepositCategory(e.target.value)}
+                disabled={approveLoading || depositLoading || isDepositInitiated}
               >
                 <option value="revenue">Revenue</option>
                 <option value="payroll">Payroll Deposit</option>
@@ -328,66 +400,79 @@ const WalletDepositModal = ({ isOpen, onClose }) => {
               </select>
             </div>
 
-            {/* Amount Input - Adjusted styles for dark background */}
-            <div className="mb-6">
+            <div className="mb-4">
               <label
                 htmlFor="depositAmount"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label text
+                className="block text-gray-300 text-sm font-medium mb-1"
               >
-                Amount:
+                Amount (USDC)
               </label>
               <input
                 type="number"
                 id="depositAmount"
-                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-300 leading-tight focus:outline-none focus:shadow-outline bg-gray-800" // Adjusted input styles for dark theme
-                placeholder="Enter amount"
+                className="shadow-sm appearance-none border border-gray-700 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800"
+                placeholder="e.g., 100.00"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
+                disabled={approveLoading || depositLoading || isDepositInitiated}
               />
             </div>
 
-            {/* Token Selection - White text for labels */}
-            <div className="mb-8">
-              <label
-                htmlFor="tokenSelect"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label text
-              >
-                Select Token:
-              </label>
-              <div className="flex space-x-6">
-                {["USDC", "ETH", "USDT"].map((token) => (
-                  <label
-                    key={token}
-                    className="inline-flex items-center text-lg text-white" // White text for token labels
-                  >
-                    <input
-                      type="radio"
-                      className="form-radio h-6 w-6 text-blue-600 focus:ring-blue-500 focus:border-blue-500"
-                      value={token}
-                      checked={selectedToken === token}
-                      onChange={() => setSelectedToken(token)}
-                    />
-                    <span className="ml-3 text-gray-300">{token}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            {/* Token Selection - Simplified as only USDC seems handled */}
+             {/* If expanding, uncomment and adjust logic in handleApprove
+             <div className="mb-6">
+               <label className="block text-gray-300 text-sm font-medium mb-2">
+                 Select Token:
+               </label>
+               <div className="flex space-x-4">
+                 {["USDC"].map((token) => ( // Currently only USDC logic is implemented
+                   <label
+                     key={token}
+                     className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer ${selectedToken === token ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                   >
+                     <input
+                       type="radio"
+                       className="sr-only" // Hide default radio
+                       value={token}
+                       checked={selectedToken === token}
+                       onChange={() => setSelectedToken(token)}
+                       disabled={approveLoading || depositLoading || isDepositInitiated}
+                     />
+                     {token}
+                   </label>
+                 ))}
+               </div>
+             </div>
+            */}
 
-            {/* Action Buttons - Adjusted button styles for dark theme */}
-            <div className="flex justify-end space-x-6">
+            {txStatusMessage && (
+              <div className="mb-4 text-center min-h-[20px]">
+                <p className={`text-sm font-medium ${ (txStatusMessage.includes("Failed") || txStatusMessage.includes("Error")) ? 'text-red-500' : (txStatusMessage.includes("Success") ? 'text-green-500' : 'text-yellow-500')}`}>{txStatusMessage}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-4">
               <button
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors text-lg" // Darker button background
-                onClick={onClose}
+                type="button"
+                className="bg-gray-600 hover:bg-gray-500 text-gray-100 font-bold py-2 px-5 rounded focus:outline-none focus:shadow-outline transition-colors text-base disabled:opacity-50"
+                onClick={handleClose}
+                disabled={approveLoading || depositLoading}
               >
                 Cancel
               </button>
               <button
-                className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center space-x-3 text-lg" // Adjusted blue button style
-                onClick={handleDeposit}
-                disabled={!depositAmount}
+                type="button"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center justify-center space-x-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                 onClick={handleApprove} // Button triggers APPROVAL first
+                 disabled={!depositAmount || Number(depositAmount) <= 0 || approveLoading || depositLoading || isDepositInitiated || !Companyaddress}
               >
-                <Download size={20} />
-                <span>Deposit</span>
+                {approveLoading ? (
+                    <><span>Approving...</span> <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div></>
+                ) : depositLoading ? (
+                    <><span>Depositing...</span> <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div></>
+                ) : (
+                    <><Download size={18} /> <span>Deposit</span></>
+                )}
               </button>
             </div>
           </motion.div>
