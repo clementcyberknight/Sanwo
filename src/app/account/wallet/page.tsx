@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {EmployerPoolContractAddress, SanwoUtilityToken, linea_scan} from "../../../sc_/utils";
+import {
+  EmployerPoolContractAddress,
+  SanwoUtilityToken,
+  linea_scan,
+} from "../../../sc_/utils";
 import EmployerPoolAbi from "../../../sc_/EmployeePoolAbi.json";
 import { useAccount, useWriteContract, useReadContract } from "wagmi";
-import { formatUnits, parseAbi, parseGwei } from 'viem'; 
+import { formatUnits, parseAbi, parseGwei } from "viem";
 import {
   Eye,
   EyeOff,
@@ -43,8 +47,6 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 
-
-
 interface Transaction {
   id: string;
   type: "deposit" | "withdrawal";
@@ -60,7 +62,7 @@ interface Transaction {
   errorDetails?: string;
   depositDate?: string | { seconds: number; nanoseconds: number };
   fromWalletAddress?: string;
-  withdrawalDate?: string | {  seconds: number; nanoseconds: number  };
+  withdrawalDate?: string | { seconds: number; nanoseconds: number };
   recipientWalletAddress?: string;
 }
 
@@ -68,7 +70,7 @@ const WalletDashboard = () => {
   const router = useRouter();
   const [firebaseUser, setFirebaseUser] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const activeAccount = useAccount(); // Wagmi hook to get account info 🚀
+  const activeAccount = useAccount();
   const useraddress = activeAccount?.address;
   const [showBalance, setShowBalance] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,38 +80,36 @@ const WalletDashboard = () => {
   const [showShieldTooltip, setShowShieldTooltip] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
-  const [balance, setBalance] = useState<string | null>("00"); // Balance can be null while loading, so type it correctly
-  // 👋 Gone are provider, signer, and employerContract states! Wagmi manages connection for reads
+  const [balance, setBalance] = useState<string | null>("00");
   const [tokens, setTokens] = useState([
-    // Initialize tokens with placeholder prices
     {
       symbol: "ETH",
       amount: "10.02",
-      price: "$...", // Placeholder
-      change: "...", // Placeholder
+      price: "$...",
+      change: "...",
       total: "$20,043.30",
       icon: "/icons/eth.png",
-      changeColor: "text-gray-500", // Default color
+      changeColor: "text-gray-500",
       balance: 10.02,
     },
     {
       symbol: "USDC",
       amount: "48,000.09",
-      price: "$...", // Placeholder
-      change: "...", // Placeholder
+      price: "$...",
+      change: "...",
       total: "$48,004.89",
       icon: "/icons/usdc.png",
-      changeColor: "text-gray-500", // Default color
+      changeColor: "text-gray-500",
       balance: 48000.09,
     },
     {
       symbol: "USDT",
       amount: "5,427.81",
-      price: "$...", // Placeholder
-      change: "...", // Placeholder
+      price: "$...",
+      change: "...",
       total: "$5,427.81",
       icon: "/icons/usdt.png",
-      changeColor: "text-gray-500", // Default color
+      changeColor: "text-gray-500",
       balance: 5427.81,
     },
   ]);
@@ -120,7 +120,7 @@ const WalletDashboard = () => {
   const COINGECKO_API_KEY = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
 
   const fetchTokenPrices = async () => {
-    const tokenIds = "ethereum,usd-coin,tether"; // Coingecko IDs for ETH, USDC, USDT
+    const tokenIds = "ethereum,usd-coin,tether";
     const vsCurrency = "usd";
     const includeChange = true;
 
@@ -144,7 +144,7 @@ const WalletDashboard = () => {
         return prevTokens.map((token) => {
           let price = "$...";
           let change = "...";
-          let changeColor = "text-gray-500"; // Default color
+          let changeColor = "text-gray-500";
 
           if (token.symbol === "ETH" && prices.ethereum) {
             price = `$${prices.ethereum.usd}`;
@@ -182,49 +182,47 @@ const WalletDashboard = () => {
   };
 
   useEffect(() => {
-    fetchTokenPrices(); // Fetch prices when component mounts
+    fetchTokenPrices();
   }, []);
 
-  // ✨ Wagmi's useContractRead hook to fetch the balance! 🚀
-  const { data: employerBalanceData, isSuccess: isBalanceSuccess, refetch: refetchBalance } = useReadContract({
-    address: EmployerPoolContractAddress as `0x${string}`, // Your contract address
-    abi: EmployerPoolAbi, // Your ABI
-    functionName: 'employerBalance', // Function name to read
-    args: [useraddress], // Pass the user's address as argument
-    enabled: !!useraddress, // Only run when user address is available (wallet connected)
+  const {
+    data: employerBalanceData,
+    isSuccess: isBalanceSuccess,
+    refetch: refetchBalance,
+  } = useReadContract({
+    address: EmployerPoolContractAddress as `0x${string}`,
+    abi: EmployerPoolAbi,
+    functionName: "employerBalance",
+    args: [useraddress],
+    ...(useraddress ? {} : { skip: true }),
     //@ts-ignore
-    chainId: 59141, // if you want to specify the chainId you are working on, or remove to use the connected chainId
+    chainId: 59141,
   });
 
-
-  // ✨ useEffect to format and set the balance when data comes back successfully from useContractRead
   useEffect(() => {
     if (isBalanceSuccess && employerBalanceData) {
       try {
         //@ts-ignore
-        const formattedBalance = formatUnits(employerBalanceData, 6); // Format using Viem!
+        const formattedBalance = formatUnits(employerBalanceData, 6);
         setBalance(formattedBalance);
         console.log(
-          `Wagmi Balance Update: formatted balance ${formattedBalance} and balance state is now ${formattedBalance}` // Updated log
+          `Wagmi Balance Update: formatted balance ${formattedBalance} and balance state is now ${formattedBalance}`
         );
       } catch (error) {
         console.error("Error formatting balance from Wagmi:", error);
-        setBalance(null); // Handle formatting errors gracefully
+        setBalance(null);
       }
     }
   }, [isBalanceSuccess, employerBalanceData]);
 
-
-  // ✨ useEffect for periodic refresh using refetch from useContractRead
   useEffect(() => {
-    if (useraddress) { // Only set interval if wallet is connected
+    if (useraddress) {
       const interval = setInterval(() => {
-        refetchBalance(); // Manually refetch balance using Wagmi's refetch function
+        refetchBalance();
       }, 10000);
       return () => clearInterval(interval);
     }
-  }, [useraddress, refetchBalance]); // Dependencies: userAddress and refetchBalance
-
+  }, [useraddress, refetchBalance]);
 
   const chartDataByRange = {
     "24H": [
@@ -341,7 +339,7 @@ const WalletDashboard = () => {
   ) => {
     try {
       if (!dateString) {
-        return "Loading..."; // Or return any default value you prefer
+        return "Loading...";
       }
 
       let date: Date;
@@ -371,7 +369,7 @@ const WalletDashboard = () => {
   };
 
   const refreshWalletData = () => {
-    refetchBalance(); // Just refetch the balance now with Wagmi's refetch function
+    refetchBalance();
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
@@ -566,7 +564,7 @@ const WalletDashboard = () => {
       date: string | { seconds: number; nanoseconds: number } | null
     ) => {
       if (!date) {
-        return Date.now(); // Return current timestamp for null dates
+        return Date.now();
       }
 
       if (typeof date === "object" && "seconds" in date) {
@@ -656,7 +654,7 @@ const WalletDashboard = () => {
                   <div className="flex items-end space-x-4">
                     <div className="text-3xl font-bold">
                       {showBalance
-                        ? formatCurrency(parseFloat(balance || "0")) // Handle potential null balance for formatting
+                        ? formatCurrency(parseFloat(balance || "0"))
                         : "•••••••"}
                     </div>
                     <div className="text-gray-300 text-sm pb-1 flex items-center">

@@ -30,7 +30,10 @@ import {
   getDoc,
   deleteDoc,
   writeBatch,
+  Timestamp,
+  FieldValue,
 } from "@/app/config/FirebaseConfig";
+import { User } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Papa from "papaparse";
@@ -48,38 +51,77 @@ import {
 } from "viem";
 import { lineaSepolia } from "viem/chains";
 
-// --- Utility Functions ---
+interface Contractor {
+  contractor_id: string;
+  contractor_name: string;
+  contractor_email: string;
+  role: string;
+  payment: number;
+  status: "Invited" | "Active" | "Paid" | "Inactive" | string;
+  contractor_wallet: Address | null;
+  invitation_note?: string;
+  inviteLink?: string;
+  businessId?: string;
+  businessname?: string;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+  [key: string]: any;
+}
+
+interface CompanyData {
+  name: string;
+  [key: string]: any;
+}
+
+interface EditFormData {
+  contractor_name: string;
+  contractor_email: string;
+  role: string;
+  payment: string;
+  invitation_note: string;
+}
+
+interface ModalPositionStyle {
+  top?: string | number;
+  left?: string | number;
+  bottom?: string | number;
+  transform?: string;
+}
+
 const showSuccessToast = (message: string) => {
   toast.success(message, {
     position: "top-right",
-    autoClose: 4000,
+    autoClose: 3000,
     hideProgressBar: false,
     closeOnClick: true,
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
-    theme: "colored",
+    theme: "light",
   });
 };
 
 const showErrorToast = (message: string) => {
   toast.error(message, {
     position: "top-right",
-    autoClose: 5000,
+    autoClose: 3000,
     hideProgressBar: false,
     closeOnClick: true,
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
-    theme: "colored",
+    theme: "light",
   });
 };
 
-const formatCurrency = (amount) => {
+const formatCurrency = (amount: string | number | null | undefined): string => {
+  if (amount === null || amount === undefined) {
+    return "N/A";
+  }
   const numericAmount =
     typeof amount === "number"
       ? amount
-      : parseFloat(String(amount)?.replace(/[^0-9.-]+/g, ""));
+      : parseFloat(String(amount).replace(/[^0-9.-]+/g, ""));
 
   if (isNaN(numericAmount)) {
     return "N/A";
@@ -90,7 +132,9 @@ const formatCurrency = (amount) => {
   }).format(numericAmount);
 };
 
-const getModalPosition = (buttonRef) => {
+const getModalPosition = (
+  buttonRef: React.RefObject<HTMLElement | null>
+): ModalPositionStyle => {
   if (!buttonRef.current)
     return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
 
@@ -115,13 +159,11 @@ const getModalPosition = (buttonRef) => {
   };
 };
 
-// --- Firestore Data Handling for Payment ---
-
 const createPendingContractorPayment = async (
   businessAddress: Address,
-  contractorToPay: any,
-  gasLimitEstimate: string | number
-) => {
+  contractorToPay: Contractor,
+  gasLimitEstimate: number
+): Promise<string> => {
   if (!businessAddress || !contractorToPay || !contractorToPay.contractor_id) {
     throw new Error("Missing business address or contractor details.");
   }
@@ -132,7 +174,7 @@ const createPendingContractorPayment = async (
   )}`;
   const timestamp = serverTimestamp();
 
-  const payrollData = {
+  const payrollData: { [key: string]: any } = {
     payrollId: paymentId,
     payrollDate: timestamp,
     transactionHash: null,
@@ -188,7 +230,7 @@ const updateFinalContractorPayment = async (
   status: "Success" | "Failed",
   txHash: string | null,
   error?: string
-) => {
+): Promise<boolean> => {
   if (!businessAddress || !paymentDocId || !contractorId) {
     console.error("Missing address, payment ID, or contractor ID for update.");
     return false;
@@ -206,7 +248,7 @@ const updateFinalContractorPayment = async (
   const timestamp = serverTimestamp();
   const batch = writeBatch(db);
 
-  const paymentUpdateData: any = {
+  const paymentUpdateData: { [key: string]: any } = {
     payrollStatus: status,
     transactionHash: txHash ?? null,
     errorDetails: error || null,
@@ -224,15 +266,15 @@ const updateFinalContractorPayment = async (
     if (paymentDocSnap.exists()) {
       const paymentData = paymentDocSnap.data();
       batch.set(historyRef, {
-        amount: paymentData.totalAmount || 0,
+        amount: paymentData?.totalAmount || 0,
         paymentId: paymentDocId,
         transactionId: paymentDocId,
         timestamp: timestamp,
         category: "Contractor Payment",
         status: "Success",
         transactionHash: txHash,
-        recipientWalletAddress: paymentData.recipient?.recipientWalletAddress,
-        recipientName: paymentData.recipient?.recipientName,
+        recipientWalletAddress: paymentData?.recipient?.recipientWalletAddress,
+        recipientName: paymentData?.recipient?.recipientName,
         businessId: businessAddress,
       });
       batch.update(contractorRef, { status: "Paid", updatedAt: timestamp });
@@ -264,60 +306,63 @@ const updateFinalContractorPayment = async (
   }
 };
 
-// --- Main Component ---
 export default function ContractorPage() {
   const router = useRouter();
 
-  // --- State ---
-  const [activeTab, setActiveTab] = useState("CONTRACTOR LIST");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [isLoadingAccount, setIsLoadingAccount] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("CONTRACTOR LIST");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+  const [isLoadingAccount, setIsLoadingAccount] = useState<boolean>(true);
 
-  // Invite Contractor State
-  const [contractorName, setContractorName] = useState("");
-  const [contractorEmail, setContractorEmail] = useState("");
-  const [contractorRole, setContractorRole] = useState("");
-  const [inviteContractorRole, setInviteContractorRole] = useState("");
-  const [contractorPayment, setContractorPayment] = useState("");
-  const [contractorNote, setContractorNote] = useState("");
-  const [companyData, setCompanyData] = useState<any>(null);
+  const [contractorName, setContractorName] = useState<string>("");
+  const [contractorEmail, setContractorEmail] = useState<string>("");
+  const [contractorRole, setContractorRole] = useState<string>("");
+  const [inviteContractorRole, setInviteContractorRole] = useState<string>("");
+  const [contractorPayment, setContractorPayment] = useState<string>("");
+  const [contractorNote, setContractorNote] = useState<string>("");
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
 
-  // Pay Contractor State
-  const [paymentContractorEmail, setPaymentContractorEmail] = useState("");
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [contractorToPay, setContractorToPay] = useState<any>(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentContractorEmail, setPaymentContractorEmail] =
+    useState<string>("");
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [contractorToPay, setContractorToPay] = useState<Contractor | null>(
+    null
+  );
+  const [isProcessingPayment, setIsProcessingPayment] =
+    useState<boolean>(false);
   const [paymentStatusMessage, setPaymentStatusMessage] = useState<string>("");
   const [pendingPaymentDocId, setPendingPaymentDocId] = useState<string | null>(
     null
   );
   const [gasLimitInput, setGasLimitInput] = useState<string>("200000");
 
-  // General List State
-  const [contractors, setContractors] = useState<any[]>([]);
-  const [isExporting, setIsExporting] = useState(false);
+  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const account = useAccount();
   const businessAddress = account?.address;
-  const [firebaseUser, setFirebaseUser] = useState<any>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 
-  // UI/Modal State
-  const [showActionMenu, setShowActionMenu] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [contractorToDelete, setContractorToDelete] = useState(null);
-  const [editingContractorId, setEditingContractorId] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    /* initial */
+  const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [contractorToDelete, setContractorToDelete] =
+    useState<Contractor | null>(null);
+  const [editingContractorId, setEditingContractorId] = useState<string | null>(
+    null
+  );
+  const [editFormData, setEditFormData] = useState<EditFormData>({
+    contractor_name: "",
+    contractor_email: "",
+    role: "",
+    payment: "",
+    invitation_note: "",
   });
-  const [modalPosition, setModalPosition] = useState({});
-  const [selectedContractor, setSelectedContractor] = useState(null);
+  const [modalPosition, setModalPosition] = useState<ModalPositionStyle>({});
+  const [selectedContractor, setSelectedContractor] =
+    useState<Contractor | null>(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+  const actionButtonRef = useRef<HTMLTableCellElement>(null);
 
-  // Refs
-  const actionMenuRef = useRef(null);
-  const actionButtonRef = useRef(null);
-
-  // --- Wagmi Hook for Contractor Payment ---
   const {
     writeContract: executeTransferByEmployer,
     isSuccess: transferSuccess,
@@ -328,8 +373,6 @@ export default function ContractorPage() {
     data: transferTxHash,
   } = useWriteContract();
 
-  // --- Effects ---
-
   useEffect(() => {
     setIsLoadingAccount(true);
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -339,9 +382,7 @@ export default function ContractorPage() {
         setCompanyData(null);
         setIsLoadingAccount(false);
         setIsLoadingData(false);
-        if (!window.location.pathname.includes("/auth/login")) {
-          router.push("/auth/login");
-        }
+        router.push("/auth/login");
       }
     });
     return () => unsubscribe();
@@ -351,10 +392,16 @@ export default function ContractorPage() {
     const fetchCompanyData = async () => {
       if (businessAddress) {
         const db = getFirestore(app);
-        const companyDocRef = doc(db, "businesses", businessAddress);
+        //@ts-ignore
+        const companyDocRef = doc<CompanyData>(
+          db,
+          "businesses",
+          businessAddress
+        );
         try {
           const docSnap = await getDoc(companyDocRef);
           if (docSnap.exists()) {
+            //@ts-ignore
             setCompanyData(docSnap.data());
           } else {
             console.log("No company document found for:", businessAddress);
@@ -380,7 +427,6 @@ export default function ContractorPage() {
   useEffect(() => {
     let unsubscribeSnapshot: (() => void) | null = null;
     setIsLoadingData(true);
-
     if (firebaseUser && businessAddress) {
       const db = getFirestore(app);
       const userDocRef = doc(db, "users", firebaseUser.uid);
@@ -392,7 +438,7 @@ export default function ContractorPage() {
             setIsLoadingData(false);
             setIsLoadingAccount(false);
             auth.signOut();
-            router.push("/auth/login");
+            if (router) router.push("/auth/login");
             return;
           }
 
@@ -400,9 +446,11 @@ export default function ContractorPage() {
           const registeredAddress = userData?.wallet_address?.toLowerCase();
           const currentAddress = businessAddress.toLowerCase();
 
-          if (registeredAddress !== currentAddress) {
+          if (!registeredAddress || registeredAddress !== currentAddress) {
             showErrorToast(
-              "Connected wallet doesn't match registered account."
+              registeredAddress
+                ? "Connected wallet doesn't match registered account."
+                : "User wallet address not found in profile."
             );
             setIsLoadingData(false);
             setIsLoadingAccount(false);
@@ -425,7 +473,13 @@ export default function ContractorPage() {
               const contractorsData = snapshot.docs.map((doc) => ({
                 contractor_id: doc.id,
                 ...doc.data(),
-              }));
+                contractor_name: doc.data().contractor_name ?? "",
+                contractor_email: doc.data().contractor_email ?? "",
+                role: doc.data().role ?? "",
+                payment: Number(doc.data().payment ?? 0),
+                status: doc.data().status ?? "Inactive",
+                contractor_wallet: doc.data().contractor_wallet ?? null,
+              })) as Contractor[];
               setContractors(contractorsData);
               setIsLoadingData(false);
             },
@@ -442,12 +496,14 @@ export default function ContractorPage() {
           setIsLoadingData(false);
           setIsLoadingAccount(false);
           auth.signOut();
-          router.push("/auth/login");
+          if (router) router.push("/auth/login");
         });
     } else {
       setContractors([]);
       setIsLoadingData(false);
-      if (firebaseUser) setIsLoadingAccount(false);
+      if (!businessAddress && firebaseUser) {
+        setIsLoadingAccount(false);
+      }
     }
 
     return () => {
@@ -456,8 +512,6 @@ export default function ContractorPage() {
       }
     };
   }, [firebaseUser, businessAddress, router]);
-
-  // --- Handlers ---
 
   const handleAddContractor = async () => {
     if (
@@ -481,13 +535,16 @@ export default function ContractorPage() {
       return;
     }
     if (!businessAddress || !firebaseUser) {
-      showErrorToast("Authentication or wallet connection issue.");
+      showErrorToast(
+        "Authentication or wallet connection issue. Please reconnect wallet and refresh."
+      );
       return;
     }
     if (
       contractors.some(
         (c) =>
-          c.contractor_email?.toLowerCase() === contractorEmail.toLowerCase()
+          c.contractor_email?.toLowerCase() ===
+          contractorEmail.trim().toLowerCase()
       )
     ) {
       showErrorToast("A contractor with this email already exists.");
@@ -502,12 +559,18 @@ export default function ContractorPage() {
 
     const db = getFirestore(app);
     const contractor_id = `cont_${Date.now()}`;
-    const inviteLink = `${window.location.origin}/contractor_connect/${firebaseUser.uid}/${contractor_id}`;
+    const inviteLink =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/contractor_connect/${businessAddress}/${contractor_id}`
+        : "";
 
-    const contractorData = {
+    const contractorData: Partial<Contractor> & {
+      createdAt: FieldValue;
+      updatedAt: FieldValue;
+    } = {
       contractor_name: contractorName.trim(),
       inviteLink: inviteLink,
-      businessId: firebaseUser.uid,
+      businessId: businessAddress,
       contractor_id: contractor_id,
       businessname: companyData.name,
       contractor_email: contractorEmail.trim().toLowerCase(),
@@ -528,7 +591,9 @@ export default function ContractorPage() {
         "contractors",
         contractor_id
       );
-      await setDoc(contractorRef, contractorData);
+      const { contractor_id: idToRemove, ...dataToSet } = contractorData;
+      await setDoc(contractorRef, dataToSet);
+
       showSuccessToast("Contractor invited successfully!");
 
       setContractorName("");
@@ -543,17 +608,18 @@ export default function ContractorPage() {
     }
   };
 
-  // --- Initiate Payment Process --- (Replaces most of old handlePayContractor)
   const initiatePaymentProcess = async () => {
     if (!contractorToPay || !businessAddress) {
-      showErrorToast("Contractor details or business address missing.");
+      showErrorToast(
+        "Contractor details or business address missing. Please select a contractor."
+      );
+      setIsProcessingPayment(false);
       return;
     }
 
-    // --- Validation Checks ---
     if (contractorToPay.status === "Paid") {
       showErrorToast(`Already paid ${contractorToPay.contractor_name}.`);
-      setShowConfirmation(false); // Close modal
+      setShowConfirmation(false);
       return;
     }
     if (
@@ -563,58 +629,43 @@ export default function ContractorPage() {
       showErrorToast(
         `${contractorToPay.contractor_name} hasn't connected their wallet or is not 'Active'.`
       );
-      setShowConfirmation(false); // Close modal
+      setShowConfirmation(false);
       return;
     }
     const paymentAmount = Number(contractorToPay.payment);
     if (isNaN(paymentAmount) || paymentAmount <= 0) {
       showErrorToast(
-        `Invalid payment amount for ${contractorToPay.contractor_name}.`
+        `Invalid payment amount (${contractorToPay.payment}) for ${contractorToPay.contractor_name}.`
       );
       setShowConfirmation(false);
       return;
     }
-    const recipientAddress = contractorToPay.contractor_wallet as Address;
-    if (
-      !recipientAddress ||
-      !recipientAddress.startsWith("0x") ||
-      recipientAddress.length !== 42
-    ) {
-      showErrorToast(
-        `Invalid wallet address for ${contractorToPay.contractor_name}.`
-      );
-      setShowConfirmation(false);
-      return;
-    }
+    const recipientAddress = contractorToPay.contractor_wallet;
+
     const gasLimitNum = Number(gasLimitInput);
     if (isNaN(gasLimitNum) || gasLimitNum <= 21000) {
       showErrorToast(
-        "Invalid Gas Limit. Please enter a reasonable value (e.g., 200000)."
+        "Invalid Gas Limit. Please enter a value greater than 21000 (e.g., 200000)."
       );
-      // Don't close confirmation yet, let them adjust gas
       return;
     }
 
-    // --- Start Processing ---
     setIsProcessingPayment(true);
     setPaymentStatusMessage("Preparing payment...");
-    setPendingPaymentDocId(null); // Clear previous pending ID
-    resetTransfer(); // Reset wagmi hook state
+    setPendingPaymentDocId(null);
+    resetTransfer();
 
     try {
-      // --- 1. Prepare Data ---
-      const parsedAmount = parseUnits(paymentAmount.toString(), 6); // Assuming 6 decimals for USDC
+      const parsedAmount = parseUnits(paymentAmount.toString(), 6);
 
-      // --- 2. Create Pending Firestore Record ---
       setPaymentStatusMessage("Creating pending payment record...");
       const newPaymentDocId = await createPendingContractorPayment(
         businessAddress,
         contractorToPay,
         gasLimitNum
       );
-      setPendingPaymentDocId(newPaymentDocId); // Store for outcome handling
+      setPendingPaymentDocId(newPaymentDocId);
 
-      // --- 3. Execute Blockchain Transaction ---
       setPaymentStatusMessage("Please approve transaction in wallet...");
       console.log(
         `Executing transferByEmployer: To=${recipientAddress}, Amount=${parsedAmount} units, Gas=${gasLimitNum}`
@@ -626,19 +677,15 @@ export default function ContractorPage() {
         functionName: "transferByEmployer",
         args: [recipientAddress, parsedAmount],
         chainId: lineaSepolia.id,
-        gas: BigInt(gasLimitNum), // Use user-provided gas limit
-        // Add gas price strategy if needed (maxFeePerGas, etc.)
+        gas: BigInt(gasLimitNum),
       });
-      // Now we wait for useEffect hooks to handle the outcome...
     } catch (error: any) {
-      // Handle errors during preparation or initial DB write
       console.error("Error during payment initiation:", error);
       const errorMsg = error.message || "Failed to initiate payment.";
       setPaymentStatusMessage(`Error: ${errorMsg}`);
       showErrorToast(`Initiation Failed: ${errorMsg}`);
 
-      // If a pending record was created, try to mark it as failed
-      if (pendingPaymentDocId) {
+      if (pendingPaymentDocId && businessAddress) {
         try {
           await updateFinalContractorPayment(
             businessAddress,
@@ -665,13 +712,13 @@ export default function ContractorPage() {
     }
   };
 
-  // --- useEffect for Transaction Success ---
   useEffect(() => {
     if (
       transferSuccess &&
       transferTxHash &&
       pendingPaymentDocId &&
-      contractorToPay
+      contractorToPay &&
+      businessAddress
     ) {
       console.log(
         "Contractor Payment Transaction Successful! Hash:",
@@ -681,7 +728,7 @@ export default function ContractorPage() {
       showSuccessToast("Blockchain transaction confirmed!");
 
       updateFinalContractorPayment(
-        businessAddress!,
+        businessAddress,
         pendingPaymentDocId,
         contractorToPay.contractor_id,
         "Success",
@@ -690,39 +737,51 @@ export default function ContractorPage() {
         .then((dbSuccess) => {
           if (dbSuccess) {
             setPaymentStatusMessage("Payment records updated successfully!");
-            // Success: Reset state, close modal after delay
             setTimeout(() => {
               setShowConfirmation(false);
               setIsProcessingPayment(false);
-              setPaymentContractorEmail(""); // Reset dropdown
+              setPaymentContractorEmail("");
               setContractorToPay(null);
               setPendingPaymentDocId(null);
-              setPaymentStatusMessage(""); // Clear message
-            }, 2000); // 2 second delay
+              setPaymentStatusMessage("");
+            }, 2000);
+          } else {
+            console.error(
+              "DB Update reported failure after successful TX, but didn't throw."
+            );
+            setPaymentStatusMessage(
+              `Transaction successful, but DB update failed.`
+            );
+            showErrorToast(`Transaction successful, but DB update failed.`);
+            setIsProcessingPayment(false);
           }
         })
-        .catch((dbError) => {
+        .catch((dbError: any) => {
           console.error("DB Update failed after successful TX:", dbError);
           setPaymentStatusMessage(
             `Transaction successful, but DB update failed: ${dbError.message}`
           );
-          showErrorToast(`Transaction successful, but DB update failed.`);
-          // Don't close modal automatically, allow user to see the DB error status
-          setIsProcessingPayment(false); // Allow interaction
+          showErrorToast(
+            `Transaction successful, but DB update failed: ${dbError.message}`
+          );
+          setIsProcessingPayment(false);
         });
-      // Don't reset state immediately, wait for DB update attempt
     }
   }, [
     transferSuccess,
     transferTxHash,
     pendingPaymentDocId,
     contractorToPay,
-    businessAddress /* Removed redundant states like setContractorToPay etc */,
+    businessAddress,
   ]);
 
-  // --- useEffect for Transaction Error ---
   useEffect(() => {
-    if (transferError && pendingPaymentDocId && contractorToPay) {
+    if (
+      transferError &&
+      pendingPaymentDocId &&
+      contractorToPay &&
+      businessAddress
+    ) {
       const rawError = transferWriteError as any;
       let errorMsg = "Contractor payment transaction failed.";
 
@@ -741,23 +800,25 @@ export default function ContractorPage() {
       setPaymentStatusMessage(`Transaction Failed: ${errorMsg}`);
       showErrorToast(`Transaction Failed: ${errorMsg}`);
 
-      // Update Firestore record to Failed
       updateFinalContractorPayment(
-        businessAddress!,
+        businessAddress,
         pendingPaymentDocId,
         contractorToPay.contractor_id,
         "Failed",
-        transferTxHash ?? null, // Include hash if tx was broadcast before failing
+        transferTxHash ?? null,
         errorMsg
-      ).catch((dbError) => {
+      ).catch((dbError: any) => {
         console.error("DB Update also failed after TX error:", dbError);
         setPaymentStatusMessage(
-          `Transaction failed (${errorMsg}). DB update also failed.`
+          `Transaction failed (${errorMsg}). DB update also failed: ${dbError.message}`
         );
-      }); // We want to show the main TX error regardless of DB update status here.
+        showErrorToast(
+          `Transaction failed and DB update also failed: ${dbError.message}`
+        );
+      });
 
-      setIsProcessingPayment(false); // Stop processing
-      setPendingPaymentDocId(null); // Clear pending ID
+      setIsProcessingPayment(false);
+      setPendingPaymentDocId(null);
     }
   }, [
     transferError,
@@ -765,40 +826,47 @@ export default function ContractorPage() {
     pendingPaymentDocId,
     contractorToPay,
     businessAddress,
-    transferTxHash /* Include tx hash */,
+    transferTxHash,
   ]);
-
-  // --- Other Handlers (Edit, Delete, Export, Filter, etc.) ---
 
   useEffect(() => {
     if (paymentContractorEmail) {
       const selected = contractors.find(
         (c) => c.contractor_email === paymentContractorEmail
       );
-      // Reset contractorToPay if selected is invalid or not payable
       if (
-        !selected ||
-        selected.status === "Paid" ||
-        selected.status === "Invited" ||
-        !selected.contractor_wallet
+        selected &&
+        selected.status !== "Paid" &&
+        selected.status !== "Invited" &&
+        selected.contractor_wallet
       ) {
-        // Optionally show a brief message if selecting an invalid one?
-        // setPaymentStatusMessage("Selected contractor cannot be paid.");
-        setContractorToPay(null);
-      } else {
         setContractorToPay(selected);
-        setPaymentStatusMessage(""); // Clear message on valid selection
+        setPaymentStatusMessage("");
+      } else {
+        setContractorToPay(null);
+        if (selected) {
+          if (selected.status === "Paid")
+            setPaymentStatusMessage(
+              "Selected contractor has already been paid."
+            );
+          else if (selected.status === "Invited")
+            setPaymentStatusMessage(
+              "Selected contractor has not accepted the invite yet."
+            );
+          else if (!selected.contractor_wallet)
+            setPaymentStatusMessage(
+              "Selected contractor has not connected their wallet."
+            );
+        }
       }
     } else {
-      setContractorToPay(null); // Clear if dropdown is empty
+      setContractorToPay(null);
+      setPaymentStatusMessage("");
     }
   }, [paymentContractorEmail, contractors]);
 
-  // Confirmation Modal Trigger
   const handleConfirmPayment = () => {
-    // contractorToPay is already set by the useEffect above
     if (contractorToPay) {
-      // Double-check validity just before showing modal
       if (contractorToPay.status === "Paid") {
         showErrorToast(
           `${contractorToPay.contractor_name} has already been paid.`
@@ -810,25 +878,25 @@ export default function ContractorPage() {
         !contractorToPay.contractor_wallet
       ) {
         showErrorToast(
-          `${contractorToPay.contractor_name} has not connected their wallet.`
+          `${contractorToPay.contractor_name} has not connected their wallet or accepted the invite.`
         );
         return;
       }
       const paymentAmount = Number(contractorToPay.payment);
       if (isNaN(paymentAmount) || paymentAmount <= 0) {
         showErrorToast(
-          `Invalid payment amount configured for ${contractorToPay.contractor_name}. Please edit the contractor.`
+          `Invalid payment amount for ${contractorToPay.contractor_name}. Please edit the contractor.`
         );
         return;
       }
-      // All checks pass, show confirmation
       setShowConfirmation(true);
-      setPaymentStatusMessage(""); // Clear any previous status
-      resetTransfer(); // Reset wagmi state when opening modal
-      setIsProcessingPayment(false); // Ensure not processing when opening modal
+      setPaymentStatusMessage("");
+      resetTransfer();
+      setIsProcessingPayment(false);
     } else if (paymentContractorEmail) {
-      // Email selected, but contractor obj is invalid (e.g., paid, invited)
-      showErrorToast("Selected contractor is not eligible for payment.");
+      showErrorToast(
+        "Selected contractor is not eligible for payment. Check status and wallet connection."
+      );
     } else {
       showErrorToast("Please select a contractor to pay.");
     }
@@ -836,21 +904,25 @@ export default function ContractorPage() {
 
   const handleCancelPayment = () => {
     setShowConfirmation(false);
-    setContractorToPay(null); // Clear the selected contractor
-    setPaymentContractorEmail(""); // Optionally reset the dropdown?
-    setIsProcessingPayment(false); // Ensure processing stops
+    setContractorToPay(null);
+    setIsProcessingPayment(false);
     setPaymentStatusMessage("");
     resetTransfer();
     setPendingPaymentDocId(null);
   };
 
-  // Export List Handler (no major changes needed)
   const handleExportList = async () => {
-    /* ... keep existing logic ... */
+    if (isExporting || contractors.length === 0) return;
     setIsExporting(true);
     try {
       const csvData = contractors.map((contractor) => ({
-        /* ... */
+        Name: contractor.contractor_name,
+        Email: contractor.contractor_email,
+        "Wallet Address": contractor.contractor_wallet ?? "N/A",
+        Role: contractor.role,
+        "Payment Amount (USD)": contractor.payment,
+        Status: contractor.status,
+        "Invitation Note": contractor.invitation_note ?? "",
       }));
       const csv = Papa.unparse(csvData, { header: true });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -862,6 +934,7 @@ export default function ContractorPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       showSuccessToast("Contractor list exported!");
     } catch (error: any) {
       console.error("Error exporting:", error);
@@ -871,30 +944,25 @@ export default function ContractorPage() {
     }
   };
 
-  // --- Edit/Delete Handlers --- (No major changes needed, ensure validity checks if editing payment amount)
-
-  const handleEditClick = (contractor) => {
+  const handleEditClick = (contractor: Contractor) => {
     setSelectedContractor(contractor);
     setEditingContractorId(contractor.contractor_id);
     setEditFormData({
       contractor_name: contractor.contractor_name || "",
       contractor_email: contractor.contractor_email || "",
       role: contractor.role || "",
-      // Use String() for payment to handle potential numbers/nulls safely in input
-      payment: String(contractor.payment ?? ""), // Handle potential null/undefined
+      payment: String(contractor.payment ?? ""),
       invitation_note: contractor.invitation_note || "",
-      // DO NOT include wallet address or status in edit form
     });
     setShowEditModal(true);
-    setShowActionMenu(null); // Close action menu if it was open
+    setShowActionMenu(null);
   };
 
-  const handleDeleteClick = (contractor) => {
+  const handleDeleteClick = (contractor: Contractor) => {
     setContractorToDelete(contractor);
     setShowDeleteModal(true);
-    // Calculate and set modal position
-    setModalPosition(getModalPosition(actionButtonRef)); // Ensure actionButtonRef is set on the parent element triggering delete
-    setShowEditModal(false); // Close edit modal if open
+    setModalPosition(getModalPosition(actionButtonRef));
+    setShowEditModal(false);
     setShowActionMenu(null);
   };
 
@@ -903,41 +971,37 @@ export default function ContractorPage() {
       showErrorToast("Missing contractor ID or business context.");
       return;
     }
-    // --- Validation ---
-    if (
-      !editFormData.contractor_name.trim() ||
-      !editFormData.contractor_email.trim() ||
-      !editFormData.role
-    ) {
+
+    const name = editFormData.contractor_name.trim();
+    const email = editFormData.contractor_email.trim().toLowerCase();
+    const role = editFormData.role;
+    const paymentString = editFormData.payment;
+    const note = editFormData.invitation_note.trim();
+
+    if (!name || !email || !role) {
       showErrorToast("Name, Email, and Role are required.");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFormData.contractor_email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       showErrorToast("Invalid email format.");
       return;
     }
-    const paymentNum = parseFloat(
-      String(editFormData.payment)?.replace(/[^0-9.-]+/g, "") ?? ""
-    );
+    const paymentNum = parseFloat(paymentString.replace(/[^0-9.-]+/g, ""));
     if (isNaN(paymentNum) || paymentNum < 0) {
-      // Allow 0 payment? Maybe should be > 0? Depends on use case.
       showErrorToast("Invalid payment amount. Must be a non-negative number.");
       return;
     }
-    // Check for email uniqueness *excluding* the current contractor being edited
-    const lowerCaseEmail = editFormData.contractor_email.trim().toLowerCase();
     if (
       contractors.some(
         (c) =>
           c.contractor_id !== editingContractorId &&
-          c.contractor_email?.toLowerCase() === lowerCaseEmail
+          c.contractor_email?.toLowerCase() === email
       )
     ) {
       showErrorToast("Another contractor already uses this email.");
       return;
     }
 
-    // --- Update Firestore ---
     try {
       const db = getFirestore(app);
       const contractorRef = doc(
@@ -948,13 +1012,12 @@ export default function ContractorPage() {
         editingContractorId
       );
 
-      // Prepare update data - only fields allowed to be edited
-      const updateData = {
-        contractor_name: editFormData.contractor_name.trim(),
-        contractor_email: lowerCaseEmail, // Store trimmed lowercase email
-        role: editFormData.role,
+      const updateData: Partial<Contractor> & { updatedAt: FieldValue } = {
+        contractor_name: name,
+        contractor_email: email,
+        role: role,
         payment: paymentNum,
-        invitation_note: editFormData.invitation_note.trim(),
+        invitation_note: note,
         updatedAt: serverTimestamp(),
       };
 
@@ -964,8 +1027,6 @@ export default function ContractorPage() {
       setShowEditModal(false);
       setEditingContractorId(null);
       setSelectedContractor(null);
-
-      // Local state update is handled automatically by the onSnapshot listener
     } catch (error: any) {
       console.error("Error updating contractor:", error);
       showErrorToast(`Update failed: ${error.message}`);
@@ -973,8 +1034,13 @@ export default function ContractorPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    /* ... keep existing logic ... */
-    if (!contractorToDelete || !businessAddress) return;
+    if (!contractorToDelete || !businessAddress) {
+      showErrorToast(
+        "Cannot delete: Contractor data or business context missing."
+      );
+      setShowDeleteModal(false);
+      return;
+    }
 
     const db = getFirestore(app);
     const contractorRef = doc(
@@ -990,26 +1056,42 @@ export default function ContractorPage() {
       showSuccessToast(`${contractorToDelete.contractor_name} deleted.`);
       setShowDeleteModal(false);
       setContractorToDelete(null);
-      // Local state is updated by onSnapshot
     } catch (error: any) {
       console.error("Error deleting contractor:", error);
       showErrorToast(`Delete failed: ${error.message}`);
-      setShowDeleteModal(false); // Close even on error
+      setShowDeleteModal(false);
     }
   };
 
-  // --- Helper Components & Data ---
-
-  const FilterDropdown = ({ options, selected, onSelect, disabled }) => {
-    // ... (keep existing FilterDropdown logic)
+  interface FilterDropdownProps {
+    options: string[];
+    selected: string;
+    onSelect: (value: string) => void;
+    disabled?: boolean;
+  }
+  const FilterDropdown: React.FC<FilterDropdownProps> = ({
+    options,
+    selected,
+    onSelect,
+    disabled,
+  }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const handleClickOutside = (event) => {
-      /* ... */
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
     };
+
     useEffect(() => {
-      /* ... */
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
     }, []);
 
     return (
@@ -1026,44 +1108,78 @@ export default function ContractorPage() {
           <ChevronDown size={16} className="-mr-1 ml-2" />
         </button>
 
-        {/* Dropdown Panel */}
+        {isOpen && (
+          <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+            <div
+              className="py-1"
+              role="menu"
+              aria-orientation="vertical"
+              aria-labelledby="options-menu"
+            >
+              {options.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => {
+                    onSelect(option);
+                    setIsOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  role="menuitem"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
 
-  // Dropdown for selecting contractor to pay
-  const ContractorSelect = ({ contractors, value, onChange, disabled }) => (
+  interface ContractorSelectProps {
+    id?: string;
+    contractors: Contractor[];
+    value: string;
+    onChange: (value: string) => void;
+    disabled?: boolean;
+  }
+  const ContractorSelect: React.FC<ContractorSelectProps> = ({
+    id,
+    contractors,
+    value,
+    onChange,
+    disabled,
+  }) => (
     <select
+      id={id}
       className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md ${
         disabled ? "bg-gray-100 opacity-70 cursor-not-allowed" : "bg-white"
       }`}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+        onChange(e.target.value)
+      }
       disabled={disabled}
     >
       <option value="">Select contractor...</option>
-      {/* Only list contractors who are 'Active' and have a wallet */}
       {contractors
-        .filter(
-          (c) =>
-            c.status !== "Invited" &&
-            c.status !== "Inactive" &&
-            c.contractor_wallet
-        ) // Filter for active/connected
+        .filter((c) => c.status !== "Invited" && c.contractor_wallet)
         .map((contractor) => (
           <option
-            key={contractor.contractor_id} // Use unique ID
-            value={contractor.contractor_email} // Value remains email for selection logic
-            disabled={contractor.status === "Paid"} // Disable if already paid
+            key={contractor.contractor_id}
+            value={contractor.contractor_email}
+            disabled={contractor.status === "Paid"}
           >
             {contractor.contractor_name}
             {contractor.status === "Paid" ? " (Paid)" : ""}
+            {contractor.status === "Invited" ? " (Invited)" : ""}
+            {!contractor.contractor_wallet ? " (No Wallet)" : ""}
           </option>
         ))}
     </select>
   );
 
-  const Skeleton = () => (
+  const Skeleton: React.FC = () => (
     <tr>
       {[...Array(7)].map((_, i) => (
         <td key={i} className="px-6 py-4">
@@ -1073,7 +1189,7 @@ export default function ContractorPage() {
     </tr>
   );
 
-  const CONTRACTOR_ROLES = [
+  const CONTRACTOR_ROLES: string[] = [
     "Freelancer",
     "Plumbing Repair",
     "Real Estate Agent",
@@ -1084,41 +1200,33 @@ export default function ContractorPage() {
     "Other",
   ];
 
-  // Calculate filtered list directly for rendering
-  const getFilteredContractorsForDisplay = () => {
-    let filtered = contractors;
+  const getFilteredContractorsForDisplay = (): Contractor[] => {
+    let filtered: Contractor[] = contractors;
 
-    // Filter by selected Role (using contractorRole state for filtering)
     if (contractorRole) {
       filtered = filtered.filter((c) => c.role === contractorRole);
     }
 
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (c) =>
+        (c: Contractor) =>
           c.contractor_name?.toLowerCase().includes(query) ||
           c.contractor_email?.toLowerCase().includes(query) ||
           c.role?.toLowerCase().includes(query) ||
           (c.contractor_wallet &&
-            c.contractor_wallet.toLowerCase().includes(query)) || // Check if wallet exists
+            c.contractor_wallet.toLowerCase().includes(query)) ||
           formatCurrency(c.payment).toLowerCase().includes(query) ||
           c.status?.toLowerCase().includes(query)
       );
     }
-    // Ensure inactive are generally hidden unless specifically searched for (maybe)
-    // Default view might hide 'Inactive', adjust if needed
-    // filtered = filtered.filter(c => c.status !== 'Inactive');
 
     return filtered;
   };
 
-  // --- Render ---
   return (
     <div className="max-w-[1400px] mx-auto p-4 md:p-6 bg-white min-h-screen">
       <ToastContainer />
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1">
@@ -1144,7 +1252,6 @@ export default function ContractorPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav
           className="-mb-px flex gap-6 sm:gap-8 overflow-x-auto"
@@ -1159,13 +1266,11 @@ export default function ContractorPage() {
                     ? "border-indigo-600 text-indigo-700"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
-                onClick={() => {
-                  setActiveTab(tab);
-                }}
+                onClick={() => setActiveTab(tab)}
                 disabled={
                   isLoadingAccount ||
                   (isLoadingData && tab !== "INVITE CONTRACTOR")
-                } // Allow invite even if list is loading
+                }
               >
                 {tab}
               </button>
@@ -1174,23 +1279,23 @@ export default function ContractorPage() {
         </nav>
       </div>
 
-      {/* Content Area */}
       <div>
         {isLoadingAccount ? (
           <div className="text-center py-10 text-gray-500 flex flex-col items-center">
             <Loader2 className="w-8 h-8 animate-spin mb-3" />
             Loading Account Information...
           </div>
+        ) : !businessAddress && firebaseUser ? (
+          <div className="text-center py-10 text-gray-500 flex flex-col items-center">
+            <AlertTriangle className="w-8 h-8 text-yellow-500 mb-3" />
+            Please connect your wallet to manage contractors.
+          </div>
         ) : (
           <>
-            {/* --- CONTRACTOR LIST TAB CONTENT --- */}
             {activeTab === "CONTRACTOR LIST" && (
               <div className="space-y-5">
-                {/* Controls Row */}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                  {/* Filters */}
                   <div className="flex items-center space-x-3 w-full sm:w-auto">
-                    {/* Role Filter */}
                     <FilterDropdown
                       options={["All Roles", ...CONTRACTOR_ROLES]}
                       selected={contractorRole || "All Roles"}
@@ -1201,11 +1306,8 @@ export default function ContractorPage() {
                       }
                       disabled={isLoadingData}
                     />
-                    {/* Status Filter (Optional) */}
-                    {/* <FilterDropdown options={['All Statuses', 'Active', 'Invited', 'Paid', 'Inactive']} ... /> */}
                   </div>
 
-                  {/* Search */}
                   <div className="relative flex-grow w-full sm:max-w-xs">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Search size={16} className="text-gray-400" />
@@ -1215,16 +1317,18 @@ export default function ContractorPage() {
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors disabled:bg-gray-100"
                       placeholder="Search contractors..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setSearchQuery(e.target.value)
+                      }
                       disabled={isLoadingData}
                     />
                   </div>
 
-                  {/* Invite Button */}
                   <div className="w-full sm:w-auto flex justify-end">
                     <button
                       className="w-full sm:w-auto px-4 py-2 bg-black text-white text-sm font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-black transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       onClick={() => setActiveTab("INVITE CONTRACTOR")}
+                      disabled={isLoadingData || isLoadingAccount}
                     >
                       <UserPlus size={16} />
                       Invite Contractor
@@ -1232,13 +1336,11 @@ export default function ContractorPage() {
                   </div>
                 </div>
 
-                {/* Contractor Table */}
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          {/* Headers */}
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Name
                           </th>
@@ -1272,14 +1374,13 @@ export default function ContractorPage() {
                                 key={contractor.contractor_id}
                                 className="hover:bg-gray-50 transition-colors"
                               >
-                                {/* Table Data Cells */}
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   <span className="text-sm font-medium text-gray-900">
                                     {contractor.contractor_name}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">
-                                  <span className="text-xs text-gray-500 font-mono">
+                                  <span className="text-xs text-gray-500 font-mono break-all">
                                     {contractor.contractor_wallet
                                       ? `${contractor.contractor_wallet.substring(
                                           0,
@@ -1315,7 +1416,7 @@ export default function ContractorPage() {
                                         ? "bg-blue-100 text-blue-800"
                                         : contractor.status === "Invited"
                                         ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-gray-100 text-gray-800" // Default/Inactive
+                                        : "bg-gray-100 text-gray-800"
                                     }`}
                                   >
                                     {contractor.status}
@@ -1325,8 +1426,6 @@ export default function ContractorPage() {
                                   className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium"
                                   ref={actionButtonRef}
                                 >
-                                  {" "}
-                                  {/* Ref needed for modal positioning */}
                                   <button
                                     onClick={() => handleEditClick(contractor)}
                                     className="text-indigo-600 hover:text-indigo-800 transition-colors"
@@ -1334,7 +1433,6 @@ export default function ContractorPage() {
                                   >
                                     Edit
                                   </button>
-                                  {/* Delete moved to Edit Modal */}
                                 </td>
                               </tr>
                             )
@@ -1342,7 +1440,7 @@ export default function ContractorPage() {
                         ) : (
                           <tr>
                             <td
-                              colSpan="7"
+                              colSpan={7}
                               className="text-center p-6 text-sm text-gray-500"
                             >
                               {contractors.length === 0
@@ -1358,19 +1456,16 @@ export default function ContractorPage() {
               </div>
             )}
 
-            {/* --- INVITE CONTRACTOR TAB CONTENT --- */}
             {activeTab === "INVITE CONTRACTOR" && (
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-2xl mx-auto">
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">
                   Invite Contractor
                 </h2>
                 <p className="text-sm text-gray-500 mb-6">
-                  Fill in the details below to invite a new contractor via
-                  email.
+                  Fill in the details below to invite a new contractor.
                 </p>
 
                 <div className="space-y-4">
-                  {/* Form Fields */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
@@ -1384,7 +1479,9 @@ export default function ContractorPage() {
                         type="text"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                         value={contractorName}
-                        onChange={(e) => setContractorName(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setContractorName(e.target.value)
+                        }
                       />
                     </div>
                     <div>
@@ -1399,7 +1496,9 @@ export default function ContractorPage() {
                         type="email"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                         value={contractorEmail}
-                        onChange={(e) => setContractorEmail(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setContractorEmail(e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -1415,7 +1514,7 @@ export default function ContractorPage() {
                         id="inviteRole"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                         value={inviteContractorRole}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                           setInviteContractorRole(e.target.value)
                         }
                       >
@@ -1446,7 +1545,9 @@ export default function ContractorPage() {
                           className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder="e.g., 500.00"
                           value={contractorPayment}
-                          onChange={(e) => setContractorPayment(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setContractorPayment(e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -1463,12 +1564,13 @@ export default function ContractorPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Add a short message for the contractor (included in email)"
                       value={contractorNote}
-                      onChange={(e) => setContractorNote(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setContractorNote(e.target.value)
+                      }
                       rows={3}
                     />
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex justify-end gap-3 pt-4">
                     <button
                       type="button"
@@ -1489,7 +1591,6 @@ export default function ContractorPage() {
               </div>
             )}
 
-            {/* --- PAY CONTRACTOR TAB CONTENT --- */}
             {activeTab === "PAY CONTRACTOR" && (
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-2xl mx-auto">
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">
@@ -1501,7 +1602,6 @@ export default function ContractorPage() {
                 </p>
 
                 <div className="space-y-4">
-                  {/* Selection Fields */}
                   <div>
                     <label
                       htmlFor="payContractorSelect"
@@ -1514,10 +1614,17 @@ export default function ContractorPage() {
                       contractors={contractors}
                       value={paymentContractorEmail}
                       onChange={setPaymentContractorEmail}
-                      disabled={isProcessingPayment || transferLoading} // Disable while processing
+                      disabled={isProcessingPayment || transferLoading}
                     />
+                    {paymentContractorEmail &&
+                      !contractorToPay &&
+                      paymentStatusMessage && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {paymentStatusMessage}
+                        </p>
+                      )}
                   </div>
-                  {contractorToPay && ( // Only show amount if a valid contractor is selected
+                  {contractorToPay && (
                     <div>
                       <label
                         htmlFor="payAmount"
@@ -1540,7 +1647,6 @@ export default function ContractorPage() {
                       </div>
                     </div>
                   )}
-                  {/* Gas Limit Input */}
                   <div>
                     <label
                       htmlFor="payGasLimit"
@@ -1552,7 +1658,9 @@ export default function ContractorPage() {
                       id="payGasLimit"
                       type="number"
                       value={gasLimitInput}
-                      onChange={(e) => setGasLimitInput(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setGasLimitInput(e.target.value)
+                      }
                       className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                         isProcessingPayment || transferLoading
                           ? "bg-gray-100 cursor-not-allowed"
@@ -1568,7 +1676,6 @@ export default function ContractorPage() {
                     </p>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex justify-end gap-3 pt-4">
                     <button
                       type="button"
@@ -1580,14 +1687,13 @@ export default function ContractorPage() {
                     </button>
                     <button
                       type="button"
-                      className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors
-                                       ${
-                                         !contractorToPay ||
-                                         isProcessingPayment ||
-                                         transferLoading
-                                           ? "bg-gray-400 cursor-not-allowed"
-                                           : "bg-indigo-600 hover:bg-indigo-700"
-                                       }`}
+                      className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${
+                        !contractorToPay ||
+                        isProcessingPayment ||
+                        transferLoading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-indigo-600 hover:bg-indigo-700"
+                      }`}
                       onClick={handleConfirmPayment}
                       disabled={
                         !contractorToPay ||
@@ -1612,9 +1718,6 @@ export default function ContractorPage() {
         )}
       </div>
 
-      {/* Modals */}
-
-      {/* Payment Confirmation Modal */}
       <AnimatePresence>
         {showConfirmation && contractorToPay && (
           <motion.div
@@ -1622,7 +1725,7 @@ export default function ContractorPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={handleCancelPayment} // Close on backdrop click
+            onClick={handleCancelPayment}
           >
             <motion.div
               className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative"
@@ -1630,7 +1733,7 @@ export default function ContractorPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 15, stiffness: 200 }}
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+              onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={handleCancelPayment}
@@ -1642,7 +1745,6 @@ export default function ContractorPage() {
               </button>
 
               <div className="flex flex-col items-center text-center">
-                {/* Icon based on status */}
                 {!isProcessingPayment && !transferLoading && !transferError && (
                   <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
                     <DollarSign className="text-indigo-600" size={24} />
@@ -1661,7 +1763,6 @@ export default function ContractorPage() {
                   Confirm Payment
                 </h2>
 
-                {/* Static Confirmation Text */}
                 {!paymentStatusMessage && !transferError && (
                   <p className="text-sm text-gray-600 mb-4">
                     Pay{" "}
@@ -1676,7 +1777,6 @@ export default function ContractorPage() {
                   </p>
                 )}
 
-                {/* Status/Error Message Area */}
                 {paymentStatusMessage && (
                   <div
                     className={`text-sm mb-4 px-3 py-2 rounded-md w-full break-words ${
@@ -1699,7 +1799,6 @@ export default function ContractorPage() {
                   </div>
                 )}
 
-                {/* Gas Limit Display (ReadOnly during processing) */}
                 <div className="w-full mb-5 text-left">
                   <label
                     htmlFor="confirmGasLimit"
@@ -1711,7 +1810,9 @@ export default function ContractorPage() {
                     id="confirmGasLimit"
                     type="number"
                     value={gasLimitInput}
-                    onChange={(e) => setGasLimitInput(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setGasLimitInput(e.target.value)
+                    }
                     className={`w-full px-3 py-1.5 border rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
                       isProcessingPayment || transferLoading || transferError
                         ? "bg-gray-100 border-gray-300 cursor-not-allowed"
@@ -1722,34 +1823,30 @@ export default function ContractorPage() {
                     step="1000"
                     disabled={
                       isProcessingPayment || transferLoading || transferError
-                    } // Disable on error too until explicitly cancelled/retried
+                    }
                   />
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex justify-center gap-3 w-full">
                   <button
                     type="button"
                     className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                     onClick={handleCancelPayment}
-                    disabled={isProcessingPayment || transferLoading} // Allow cancel unless processing HARD
+                    disabled={isProcessingPayment || transferLoading}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors
-                                         ${
-                                           isProcessingPayment ||
-                                           transferLoading ||
-                                           transferError
-                                             ? "bg-gray-400 cursor-not-allowed"
-                                             : "bg-green-600 hover:bg-green-700"
-                                         }`}
-                    onClick={initiatePaymentProcess} // Always calls the initiation
+                    className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${
+                      isProcessingPayment || transferLoading || transferError
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                    onClick={initiatePaymentProcess}
                     disabled={
                       isProcessingPayment || transferLoading || transferError
-                    } // Disable if processing or error occurred
+                    }
                   >
                     {isProcessingPayment || transferLoading ? (
                       <Loader2 size={16} className="animate-spin" />
@@ -1769,7 +1866,6 @@ export default function ContractorPage() {
         )}
       </AnimatePresence>
 
-      {/* Edit Contractor Modal */}
       <AnimatePresence>
         {showEditModal && selectedContractor && (
           <motion.div
@@ -1777,7 +1873,7 @@ export default function ContractorPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowEditModal(false)} // Close on backdrop click
+            onClick={() => setShowEditModal(false)}
           >
             <motion.div
               className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl overflow-hidden"
@@ -1785,7 +1881,7 @@ export default function ContractorPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 15, stiffness: 200 }}
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -1799,7 +1895,6 @@ export default function ContractorPage() {
                 </button>
               </div>
 
-              {/* Edit Form Fields */}
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                 <div>
                   <label
@@ -1812,7 +1907,7 @@ export default function ContractorPage() {
                     id="editName"
                     type="text"
                     value={editFormData.contractor_name}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setEditFormData({
                         ...editFormData,
                         contractor_name: e.target.value,
@@ -1832,7 +1927,7 @@ export default function ContractorPage() {
                     id="editEmail"
                     type="email"
                     value={editFormData.contractor_email}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setEditFormData({
                         ...editFormData,
                         contractor_email: e.target.value,
@@ -1852,8 +1947,11 @@ export default function ContractorPage() {
                     id="editRole"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                     value={editFormData.role}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, role: e.target.value })
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setEditFormData({
+                        ...editFormData,
+                        role: e.target.value,
+                      })
                     }
                   >
                     <option value="">Select role...</option>
@@ -1877,7 +1975,7 @@ export default function ContractorPage() {
                     min="0"
                     step="0.01"
                     value={editFormData.payment}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setEditFormData({
                         ...editFormData,
                         payment: e.target.value,
@@ -1896,7 +1994,7 @@ export default function ContractorPage() {
                   <textarea
                     id="editNote"
                     value={editFormData.invitation_note}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setEditFormData({
                         ...editFormData,
                         invitation_note: e.target.value,
@@ -1906,14 +2004,13 @@ export default function ContractorPage() {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   ></textarea>
                 </div>
-                {/* Display Wallet and Status Readonly */}
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div>
                     <p className="text-sm font-medium text-gray-700 mb-1">
                       Wallet Address
                     </p>
                     <p className="text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded break-all">
-                      {selectedContractor.contractor_wallet || "Not Connected"}
+                      {selectedContractor.contractor_wallet ?? "Not Connected"}
                     </p>
                   </div>
                   <div>
@@ -1926,7 +2023,9 @@ export default function ContractorPage() {
                           ? "bg-green-100 text-green-800"
                           : selectedContractor.status === "Active"
                           ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : selectedContractor.status === "Invited"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {selectedContractor.status}
@@ -1935,18 +2034,13 @@ export default function ContractorPage() {
                 </div>
               </div>
 
-              {/* Action Buttons in Edit Modal */}
               <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-                {/* Delete Button */}
                 <button
-                  onClick={() => handleDeleteClick(selectedContractor)} // Opens delete confirmation
+                  onClick={() => handleDeleteClick(selectedContractor)}
                   className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-md text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors flex items-center gap-1.5"
                 >
-                  <Trash2 size={14} />
-                  Delete
+                  <Trash2 size={14} /> Delete
                 </button>
-
-                {/* Cancel and Save Buttons */}
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowEditModal(false)}
@@ -1967,15 +2061,14 @@ export default function ContractorPage() {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showDeleteModal && contractorToDelete && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4" // Higher z-index than edit modal
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowDeleteModal(false)} // Close on backdrop click
+            onClick={() => setShowDeleteModal(false)}
           >
             <motion.div
               className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl text-center"
@@ -1983,7 +2076,7 @@ export default function ContractorPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 15, stiffness: 200 }}
-              onClick={(e) => e.stopPropagation()} // Prevent close on inner click
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="text-red-600" size={24} />
@@ -2016,6 +2109,6 @@ export default function ContractorPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div> // End main container
+    </div>
   );
 }
