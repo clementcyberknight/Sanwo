@@ -166,7 +166,7 @@ const WalletSendModal: React.FC<WalletSendModalProps> = ({
         await addDoc(withdrawalsRef, {
           withdrawalId,
           withdrawalDate: timestamp,
-          withdrawalAmount: Number(amount) || 0,
+          withdrawalAmount: Number(amount),
           category: category,
           withdrawalToken: token,
           businessId: businessAddress,
@@ -193,7 +193,7 @@ const WalletSendModal: React.FC<WalletSendModalProps> = ({
           `businesses/${businessAddress}/payments/${paymentId}`
         );
         await setDoc(paymentsRef, {
-          amount: Number(amount) || 0,
+          amount: Number(amount),
           paymentId,
           linkedTransactionId: withdrawalId,
           category: "withdrawal",

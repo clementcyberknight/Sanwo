@@ -131,7 +131,7 @@ const TransactionDetailsModal = ({
                     label="Transaction Hash"
                     value={
                       <a
-                        href={`https://sepolia.arbiscan.io/tx/${transaction.transactionHash}`}
+                        href={`https://explorer.sepolia.linea.build/tx/${transaction.transactionHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-700 flex items-center"
