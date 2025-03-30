@@ -1,21 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import { ExternalProvider } from "@ethersproject/providers";
-import { MockUSDC, abi, payWorkers } from "@/sc_stylus/scabi";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { XCircle, Send } from "lucide-react";
-import { db } from "@/app/config/FirebaseConfig";
+import { XCircle, Send, Loader2 } from "lucide-react"; // Added Loader2 for spinner
 import {
+  db,
   collection,
   addDoc,
   serverTimestamp,
   doc,
   setDoc,
-} from "firebase/firestore";
-import { useAccount } from "wagmi";
+} from "@/app/config/FirebaseConfig";
+import EmployerPool from "../../sc_/EmployeePoolAbi.json";
+import {
+  EmployerPoolContractAddress,
+  SanwoUtilityToken, // Assuming the pool transfers USDC like the deposit example
+  linea_scan,
+} from "../../sc_/utils";
+import { useAccount, useWriteContract } from "wagmi";
+import { parseUnits, isAddress } from 'viem'; // Use viem's isAddress for validation
+import { lineaSepolia } from 'viem/chains';
 
+// Define ABIs - Only EmployerPool ABI is needed for transferByEmployer
+const EMPLOYER_POOL_ABI = EmployerPool;
+
+// --- Animation Variants --- (Copied from Deposit Modal)
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -24,147 +33,144 @@ const backdropVariants = {
 const modalVariants = {
   hidden: { y: "100vh", opacity: 0 },
   visible: {
-    y: "-50%",
+    y: "-50%", // Center vertically using transform
     opacity: 1,
     transition: { delay: 0.1, duration: 0.4, type: "spring", stiffness: 100 },
   },
   exit: { y: "100vh", opacity: 0 },
 };
 
-declare global {
-  interface Window {
-    ethereum?: ExternalProvider & { request: (...args: any[]) => Promise<any> };
-  }
+// --- Component Props Interface ---
+interface WalletSendModalProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-//@ts-ignore
-const WalletSendModal = ({ isOpen, onClose }) => {
-  const [recipientAddress, setRecipientAddress] = useState("");
-  const [sendAmount, setSendAmount] = useState("");
-  const [selectedToken, setSelectedToken] = useState("USDC"); // Default to USDC
-  const [isAddressValid, setIsAddressValid] = useState(true);
-  const [withdrawalCategory, setWithdrawalCategory] = useState("payroll");
-  const Account = useAccount();
-  const businessAddress = Account?.address;
+// --- Component Implementation ---
+const WalletSendModal: React.FC<WalletSendModalProps> = ({ isOpen, onClose }) => {
+  // --- State ---
+  const [recipientAddress, setRecipientAddress] = useState<string>("");
+  const [sendAmount, setSendAmount] = useState<string>("");
+  // Simplified token selection assuming only pool's token (USDC?) is transferred via this function
+  const [selectedToken] = useState<string>("USDC"); // Hardcoded for now, remove UI if only USDC
+  const [withdrawalCategory, setWithdrawalCategory] = useState<string>("vendor"); // Default category
+  const [txStatusMessage, setTxStatusMessage] = useState<string>("");
+  const [isValidRecipient, setIsValidRecipient] = useState<boolean>(true);
 
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<any>(null);
-  const [employerContract, setEmployerContract] = useState<any>(null);
+  // --- Wagmi Hooks ---
+  const { address: businessAddress } = useAccount(); // Get connected account address
+  const {
+    writeContract: transferByEmployer, // Renamed function for clarity
+    data: txHash, // Transaction hash returned on successful submission
+    isPending: isLoading, // Use isPending for loading state (wagmi v2)
+    isSuccess,
+    isError,
+    error: writeError, // Detailed error object
+    reset: resetWriteContract, // Function to reset the hook's state
+  } = useWriteContract();
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      const providerInstance = new ethers.BrowserProvider(
-        window.ethereum as any
-      );
-      setProvider(providerInstance);
-      providerInstance
-        .getSigner()
-        .then((s) => setSigner(s))
-        .catch((err) => console.error(err));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (signer) {
-      const contract = new ethers.Contract(payWorkers, abi, signer);
-      setEmployerContract(contract);
-    }
-  }, [signer]);
-
-  const validateAddress = (address: String) => {
-    // Basic validation - implement your specific validation logic
-    return address.startsWith("0x") && address.length === 42;
-  };
-
-  //@ts-ignore
-  const handleAddressChange = (e) => {
-    const address = e.target.value;
-    setRecipientAddress(address);
-
-    // Only validate if the user has entered something
-    if (address.length > 0) {
-      setIsAddressValid(validateAddress(address));
-    } else {
-      setIsAddressValid(true); // Reset validation if field is empty
-    }
-  };
-
-  // Add categories for withdrawal transactions
+  // --- Constants ---
   const withdrawalCategories = [
     { value: "vendor", label: "Vendor Payment" },
     { value: "refund", label: "Refund" },
-    { value: "investment", label: "Investment" },
+    { value: "investment", label: "Investment Return" }, // Clarified label
     { value: "operational", label: "Operational Expense" },
+    { value: "dividend", label: "Dividend Payout"}, // Added option
+    { value: "partner", label: "Partner Withdrawal"}, // Added option
     { value: "other", label: "Other" },
   ];
 
-  const getDeviceInfo = () => {
+  // --- Address Validation ---
+  useEffect(() => {
+    if (recipientAddress === "") {
+      setIsValidRecipient(true); // Valid if empty
+    } else {
+      setIsValidRecipient(isAddress(recipientAddress)); // Use viem's checker
+    }
+  }, [recipientAddress]);
+
+  // --- Helper Functions (Consider moving to a utility file if reused) ---
+  const getDeviceInfo = useCallback(() => {
+    if (typeof window === "undefined") return {}; // Guard for SSR
     return {
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       language: navigator.language,
       screenResolution: `${window.screen.width}x${window.screen.height}`,
     };
-  };
+  }, []);
 
-  const getLocationInfo = async () => {
+  const getLocationInfo = useCallback(async () => {
+    // Check if API key is configured - skip if not to avoid errors/costs
+    if (!process.env.NEXT_PUBLIC_IPAPI_API_KEY) {
+      console.warn("IPAPI API key not configured. Skipping location info.");
+      return { country: "N/A", region: "N/A", city: "N/A", ipAddress: "N/A" };
+    }
     try {
+      // Ensure you have CORS configured if calling from browser directly,
+      // or preferably call this from a backend API route.
       const response = await fetch(
         `https://api.ipapi.com/api/check?access_key=${process.env.NEXT_PUBLIC_IPAPI_API_KEY}`
       );
+       if (!response.ok) {
+           const errorText = await response.text();
+           throw new Error(`IPAPI request failed with status ${response.status}: ${errorText}`);
+       }
       const data = await response.json();
-      console.log("location info", data);
+      if (data.error) {
+          throw new Error(`IPAPI Error: ${data.info || 'Unknown error'}`);
+      }
+      console.log("Location info fetched:", data);
       return {
-        country: data.country_name,
-        region: data.region_name,
-        city: data.city,
-        ipAddress: data.ip,
+        country: data.country_name || "Unknown",
+        region: data.region_name || "Unknown",
+        city: data.city || "Unknown",
+        ipAddress: data.ip || "Unknown",
       };
     } catch (error) {
       console.error("Error fetching location info:", error);
-      return {
-        country: "Unknown",
-        region: "Unknown",
-        city: "Unknown",
-        ipAddress: "Unknown",
-      };
+      return { country: "Error", region: "Error", city: "Error", ipAddress: "Error" };
     }
-  };
+  }, []); // Empty dependency array, this function doesn't depend on component state
 
-  const storeWithdrawalTransaction = async (
+  // --- Firestore Storage Function ---
+  const storeWithdrawalTransaction = useCallback(async (
     amount: string,
-    recipientAddress: string,
-    txHash: string,
-    status: "Success" | "Pending" | "Failed",
+    recipient: string,
+    category: string,
+    token: string,
+    txHash: string | null,
+    status: "Success" | "Failed",
     error?: string,
-    gasFees?: string
+    // gasFees?: string // Note: Getting accurate gas AFTER confirmation is complex with just wagmi hooks
   ) => {
     if (!businessAddress) {
-      console.error("No business address found");
+      console.error("Business address not available for storing transaction.");
+      setTxStatusMessage("Error: Wallet not connected."); // Inform user
       return;
     }
+    console.log(`Storing withdrawal: Amount=${amount}, Recipient=${recipient}, Cat=${category}, Token=${token}, Hash=${txHash}, Status=${status}, Error=${error}`);
 
     try {
       const timestamp = serverTimestamp();
-      const withdrawalId = Date.now().toString();
-      const locationInfo = await getLocationInfo();
+      const txId = txHash ?? `local_${Date.now()}`; // Use tx hash if available, else a temp ID
+      const withdrawalId = `wdl_${txId}`;
+      const locationInfo = await getLocationInfo(); // Fetch location on save
+      const deviceInfo = getDeviceInfo(); // Get device info on save
 
-      // Store in withdrawals collection (keeping detailed information)
-      const withdrawalsRef = collection(
-        db,
-        `businesses/${businessAddress}/withdrawals`
-      );
+      // --- Withdrawals Collection --- (Detailed Record)
+      const withdrawalsRef = collection(db, `businesses/${businessAddress}/withdrawals`);
       await addDoc(withdrawalsRef, {
         withdrawalId,
         withdrawalDate: timestamp,
-        withdrawalAmount: Number(amount),
-        category: withdrawalCategory,
-        withdrawalToken: selectedToken,
+        withdrawalAmount: Number(amount) || 0,
+        category: category,
+        withdrawalToken: token,
         businessId: businessAddress,
-        recipientWalletAddress: recipientAddress,
-        transactionHash: txHash,
+        recipientWalletAddress: recipient,
+        transactionHash: txHash ?? null,
         withdrawalStatus: status,
-        gasFees: gasFees || null,
+        gasFees: null, // Placeholder - hard to get reliably here
         errorDetails: error || null,
         ipAddress: locationInfo.ipAddress,
         geoLocation: {
@@ -172,201 +178,243 @@ const WalletSendModal = ({ isOpen, onClose }) => {
           region: locationInfo.region,
           city: locationInfo.city,
         },
-        deviceInfo: getDeviceInfo(),
+        deviceInfo: deviceInfo,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        transactionType: "withdrawal", // Added type for consistency
+      });
+
+      // --- Payments Collection --- (Simplified for Payment History?)
+      // Consider if this is truly needed alongside Withdrawals and WalletTransactions
+      const paymentId = `pay_${withdrawalId}`; // Link to withdrawal
+      const paymentsRef = doc(db, `businesses/${businessAddress}/payments/${paymentId}`);
+      await setDoc(paymentsRef, {
+        amount: Number(amount) || 0,
+        paymentId,
+        linkedTransactionId: withdrawalId, // Link to the specific withdrawal record
+        category: "withdrawal", // Top-level category
+        subCategory: category, // The specific withdrawal category
+        status: status,
+        transactionHash: txHash ?? null,
+        timestamp: timestamp,
+        type: "withdrawal",
+      });
+
+      // --- WalletTransactions Collection --- (For Activity Feed)
+      const walletTxId = `wtx_${withdrawalId}`; // Link to withdrawal
+      const walletTransactionsRef = collection(db, `businesses/${businessAddress}/walletTransactions`);
+      await addDoc(walletTransactionsRef, {
+        id: walletTxId,
+        linkedTransactionId: withdrawalId,
+        type: "withdrawal", // Overall type
+        amount: Number(amount) || 0,
+        token: token,
+        status: status, // Overall status
+        category: category, // Specific category for context
+        transactionHash: txHash ?? null,
+        timestamp: timestamp, // Use Firestore server timestamp consistently
+        fromWalletAddress: businessAddress,
+        toWalletAddress: recipient,
+        errorDetails: error || null,
+        description: `${status === 'Success' ? 'Sent' : 'Attempted to send'} ${amount} ${token} to ${recipient.substring(0, 6)}...${recipient.substring(recipient.length - 4)}. Category: ${category}. ${error ? `Error: ${error.substring(0, 50)}...` : ''}`,
+        businessId: businessAddress,
         createdAt: timestamp,
         updatedAt: timestamp,
       });
 
-      // Store in payments collection
-      const paymentsRef = doc(
-        db,
-        `businesses/${businessAddress}/payments/${withdrawalId}`
-      );
-      await setDoc(paymentsRef, {
-        amount: Number(amount),
-        withdrawalId,
-        transactionId: withdrawalId,
-        category: "withdrawal",
-        status: status,
-        transactionHash: txHash,
-        timestamp: timestamp,
-      });
+      console.log(`Withdrawal transaction (Status: ${status}) stored successfully in Firestore.`);
 
-      // Store in walletTransactions collection for wallet page UI
-      const walletTransactionsRef = collection(
-        db,
-        `businesses/${businessAddress}/walletTransactions`
-      );
-      await addDoc(walletTransactionsRef, {
-        id: withdrawalId,
-        type: "withdrawal",
-        withdrawalAmount: Number(amount),
-        withdrawalToken: selectedToken,
-        withdrawalStatus: status,
-        category: withdrawalCategory,
-        transactionHash: txHash,
-        createdAt: timestamp,
-        withdrawalDate: timestamp,
-        recipientWalletAddress: recipientAddress,
-        errorDetails: error || null,
-        gasFees: gasFees || null,
-        // Additional fields needed for the wallet page UI
-        description: `Sent ${amount} ${selectedToken} to ${recipientAddress.substring(
-          0,
-          6
-        )}...${recipientAddress.substring(38)}`,
-        fromWalletAddress: businessAddress,
-        toWalletAddress: recipientAddress,
-        status: status,
-        amount: Number(amount),
-        token: selectedToken,
-        transactionType: "withdrawal",
-        timestamp: timestamp,
-      });
-
-      console.log(
-        "Withdrawal transaction stored successfully in all collections"
-      );
-    } catch (error) {
-      console.error("Error storing withdrawal transaction:", error);
-      throw new Error("Failed to store withdrawal transaction");
+    } catch (firestoreError: any) {
+      console.error("Error storing withdrawal transaction in Firestore:", firestoreError);
+      setTxStatusMessage(`Error saving transaction record: ${firestoreError.message}`);
+      // Do not throw; allow UI to show the message
     }
-  };
+  }, [businessAddress, getLocationInfo, getDeviceInfo]); // Dependencies for the callback
 
+
+  // --- Transaction Initiation ---
   const handleSend = async () => {
-    if (!signer || !recipientAddress) {
-      console.error("Missing signer or recipient address");
+    if (!businessAddress) {
+      setTxStatusMessage("Please connect your wallet.");
       return;
     }
-
-    if (!validateAddress(recipientAddress)) {
-      console.error("Invalid recipient address");
+    if (!isValidRecipient || !recipientAddress) {
+      setTxStatusMessage("Invalid recipient address.");
+      setIsValidRecipient(false); // Ensure visual feedback if somehow bypassed
       return;
     }
-
     if (!sendAmount || Number(sendAmount) <= 0) {
-      console.error("Invalid withdrawal amount");
+      setTxStatusMessage("Invalid send amount.");
       return;
     }
+     // Assuming pool transfers USDC (6 decimals)
+     if (selectedToken !== "USDC") {
+        setTxStatusMessage("Currently, only USDC transfers from the pool are supported.");
+        console.warn("Non-USDC token selected, but proceeding with contract logic assuming USDC.");
+        // return; // Or handle other tokens if contract supports it
+    }
+
+    resetWriteContract(); // Reset previous transaction state
+    setTxStatusMessage("Processing transaction..."); // Initial status
 
     try {
-      // Set initial pending status
+      const amountParsed = parseUnits(sendAmount, 6); // USDC assumed 6 decimals
+
+      console.log(`Attempting to send ${sendAmount} ${selectedToken} (${amountParsed} units) to ${recipientAddress} via EmployerPool`);
+
+      // Call the wagmi hook to initiate the transaction
+      transferByEmployer({
+        chainId: lineaSepolia.id, // Use imported chain object
+        address: EmployerPoolContractAddress as `0x${string}`,
+        abi: EMPLOYER_POOL_ABI,
+        functionName: 'transferByEmployer',
+        args: [recipientAddress as `0x${string}`, amountParsed],
+        // Removed hardcoded gas - let wagmi/wallet estimate
+      });
+      console.log("Withdrawal transaction sent to wallet for confirmation...");
+      // The rest (success/error handling) is managed by useEffect hooks
+
+    } catch (initiationError: any) {
+      const errorMsg = initiationError.shortMessage || initiationError.message || "Transaction failed to initiate.";
+      console.error("Error initiating withdrawal transaction:", initiationError);
+      setTxStatusMessage(`Error: ${errorMsg}`);
+      // Store failure immediately if initiation fails (won't have a tx hash)
       await storeWithdrawalTransaction(
         sendAmount,
         recipientAddress,
-        "",
-        "Pending"
-      );
-
-      const conv_amount = ethers.parseUnits(sendAmount, 6);
-
-      try {
-        const tx = await employerContract.transferByEmployer(
-          recipientAddress,
-          conv_amount
-        );
-        const receipt = await tx.wait();
-
-        // Update with success status
-        await storeWithdrawalTransaction(
-          sendAmount,
-          recipientAddress,
-          receipt.hash,
-          "Success",
-          "null" + null,
-          receipt.gasUsed?.toString()
-        );
-
-        console.log(`Successfully sent ${sendAmount} ${selectedToken}`);
-        onClose();
-      } catch (error) {
-        console.error("Transaction failed:", error);
-
-        // Update with failure status
-        await storeWithdrawalTransaction(
-          sendAmount,
-          recipientAddress,
-          "",
-          "Failed",
-          "failed to process" + error
-        );
-      }
-    } catch (error) {
-      console.error("Process failed:", error);
-      await storeWithdrawalTransaction(
-        sendAmount,
-        recipientAddress,
-        "",
+        withdrawalCategory,
+        selectedToken,
+        null, // No tx hash available
         "Failed",
-        "Process failed: " + error
+        `Initiation Failed: ${errorMsg}`
       );
+      resetWriteContract(); // Ensure state is clean after failure
     }
   };
 
+  // --- Effect Hook for SUCCESSFUL Transaction ---
+  useEffect(() => {
+    if (isSuccess && txHash) {
+      console.log(`Withdrawal Transaction Successful! Hash: ${txHash}`);
+      setTxStatusMessage("Withdrawal Successful!");
+      // Store the successful transaction details in Firestore
+      storeWithdrawalTransaction(
+        sendAmount,
+        recipientAddress,
+        withdrawalCategory,
+        selectedToken,
+        txHash,
+        "Success"
+      ).then(() => {
+         console.log("Successful withdrawal stored in DB.");
+          // Close modal after a short delay
+          setTimeout(() => {
+              handleClose();
+          }, 2000); // 2-second delay
+      }).catch((dbError) => {
+         console.error("Failed to store successful withdrawal in DB:", dbError);
+         setTxStatusMessage("Withdrawal succeeded but failed to save record.");
+         // Keep modal open to show the message if DB save fails
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuccess, txHash, storeWithdrawalTransaction, sendAmount, recipientAddress, withdrawalCategory, selectedToken]);
+  // Add handleClose to dependencies if it's used directly inside, but it's better called via timeout outside the direct effect logic for clarity.
+
+  // --- Effect Hook for FAILED Transaction ---
+  useEffect(() => {
+    if (isError && !isLoading) { // Ensure it's a final error state, not just mid-process
+      const errorMsg = writeError?.shortMessage || writeError?.message || "Withdrawal transaction failed.";
+      console.error("Withdrawal Transaction Failed:", writeError);
+      setTxStatusMessage(`Withdrawal Failed: ${errorMsg}`);
+      // Store the failed transaction details
+      storeWithdrawalTransaction(
+        sendAmount,
+        recipientAddress,
+        withdrawalCategory,
+        selectedToken,
+        txHash ?? null, // Include hash if it exists (failed on-chain), else null
+        "Failed",
+        errorMsg
+      ).catch((dbError) => {
+          // Log extra error if DB save fails too
+          console.error("Additionally, failed to store failed withdrawal record in DB:", dbError);
+      });
+       // Do not close the modal automatically on error
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isError, writeError, isLoading, storeWithdrawalTransaction, sendAmount, recipientAddress, withdrawalCategory, selectedToken, txHash]);
+
+
+  // --- Modal Close Handler ---
+  const handleClose = useCallback(() => {
+    onClose(); // Call the parent's close handler
+    // Reset state after animation duration
+    setTimeout(() => {
+      setRecipientAddress("");
+      setSendAmount("");
+      setWithdrawalCategory("vendor");
+      setTxStatusMessage("");
+      setIsValidRecipient(true);
+      resetWriteContract(); // Reset wagmi hook state
+    }, 300); // Match animation duration or slightly longer
+  }, [onClose, resetWriteContract]);
+
+
+  // --- Render Logic ---
   return (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-50 flex items-center justify-center" // Increased opacity for darker backdrop
+            className="fixed inset-0 bg-black bg-opacity-70 z-50" // Consistent backdrop style
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
             exit="hidden"
-            onClick={onClose}
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
+            onClick={handleClose} // Use internal handler
           />
 
-          {/* Modal Content - Darker background and white text */}
+          {/* Modal */}
           <motion.div
-            className="relative bg-gray-900 text-white rounded-2xl shadow-lg p-10 max-w-4xl z-50 overflow-hidden" // Dark gray background and white text
+             className="fixed top-1/2 left-1/2 bg-gray-900 text-white rounded-2xl shadow-lg p-8 max-w-xl w-11/12 z-50" // Consistent modal style
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "30%", // Moved left from center (was 50%)
-              transform: "translate(-50%, -50%)",
-              width: "80%",
-              maxWidth: "800px",
-            }}
+            style={{ x: "-50%", y: "-50%" }} // Consistent positioning
+            onClick={(e) => e.stopPropagation()} // Prevent backdrop clickthrough
           >
-            {/* Close Button - White color for visibility */}
+            {/* Close Button */}
             <button
-              className="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none" // White close button
-              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white focus:outline-none"
+              onClick={handleClose} // Use internal handler
               aria-label="Close"
+              disabled={isLoading} // Disable close during transaction
             >
               <XCircle size={24} />
             </button>
 
-            <h2 className="text-3xl font-semibold text-white mb-8">
-              Send Crypto
+            {/* Title */}
+            <h2 className="text-2xl font-semibold text-white mb-6">
+              Send Crypto from Pool
             </h2>
 
-            {/* Add Category Selection Dropdown - Styles adjusted for dark theme */}
-            <div className="mb-6">
+            {/* Category Selection */}
+            <div className="mb-4">
               <label
                 htmlFor="withdrawalCategory"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
+                className="block text-gray-300 text-sm font-medium mb-1"
               >
-                Payment Category:
+                Payment Category
               </label>
               <select
                 id="withdrawalCategory"
-                className="shadow border rounded w-full py-3 px-4 text-gray-300 bg-gray-800 focus:outline-none focus:shadow-outline" // Adjusted input styles for dark theme
+                className="shadow-sm border border-gray-700 rounded w-full py-2 px-3 text-white bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={withdrawalCategory}
                 onChange={(e) => setWithdrawalCategory(e.target.value)}
+                disabled={isLoading}
               >
                 {withdrawalCategories.map((category) => (
                   <option key={category.value} value={category.value}>
@@ -376,92 +424,132 @@ const WalletSendModal = ({ isOpen, onClose }) => {
               </select>
             </div>
 
-            {/* Recipient Wallet Address Input - Styles adjusted for dark theme */}
-            <div className="mb-6">
+            {/* Recipient Address Input */}
+            <div className="mb-4">
               <label
                 htmlFor="recipientAddress"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
+                className="block text-gray-300 text-sm font-medium mb-1"
               >
-                Recipient Wallet Address:
+                Recipient Wallet Address
               </label>
               <input
                 type="text"
                 id="recipientAddress"
-                className={`shadow appearance-none border rounded w-full py-3 px-4 text-gray-300 leading-tight focus:outline-none focus:shadow-outline bg-gray-800 ${
-                  // Adjusted input styles for dark theme
-                  !isAddressValid ? "border-red-500" : ""
-                }`}
-                placeholder="Enter wallet address (0x...)"
+                className={`shadow-sm appearance-none border ${
+                    !isValidRecipient ? 'border-red-500' : 'border-gray-700'
+                } rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800`}
+                placeholder="0x..."
                 value={recipientAddress}
-                onChange={handleAddressChange}
+                onChange={(e) => setRecipientAddress(e.target.value)}
+                disabled={isLoading}
               />
-              {!isAddressValid && (
-                <p className="text-red-500 text-sm mt-1">
-                  Please enter a valid wallet address
+              {!isValidRecipient && recipientAddress !== "" && ( // Show error only if invalid and not empty
+                <p className="text-red-500 text-xs mt-1">
+                  Invalid wallet address format.
                 </p>
               )}
             </div>
 
-            {/* Token Selection - White text for labels */}
+            {/* Amount Input */}
             <div className="mb-6">
               <label
-                htmlFor="tokenSelect"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
-              >
-                Select Token:
-              </label>
-              <div className="flex space-x-6">
-                {["USDC", "ETH", "USDT"].map((token) => (
-                  <label
-                    key={token}
-                    className="inline-flex items-center text-lg text-white" // White text for token labels
-                  >
-                    <input
-                      type="radio"
-                      className="form-radio h-6 w-6 text-blue-600 focus:ring-blue-500 focus:border-blue-500"
-                      value={token}
-                      checked={selectedToken === token}
-                      onChange={() => setSelectedToken(token)}
-                    />
-                    <span className="ml-3 text-gray-300">{token}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Amount Input - Styles adjusted for dark theme */}
-            <div className="mb-8">
-              <label
                 htmlFor="sendAmount"
-                className="block text-gray-300 text-sm font-bold mb-2" // Light gray label
+                className="block text-gray-300 text-sm font-medium mb-1"
               >
-                Amount:
+                Amount ({selectedToken}) {/* Show the selected/hardcoded token */}
               </label>
               <input
                 type="number"
                 id="sendAmount"
-                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-300 leading-tight focus:outline-none focus:shadow-outline bg-gray-800" // Adjusted input styles for dark theme
-                placeholder="Enter amount to send"
+                className="shadow-sm appearance-none border border-gray-700 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800"
+                placeholder="e.g., 50.00"
                 value={sendAmount}
-                onChange={(e) => setSendAmount(e.target.value)}
+                 // Basic validation for positive numbers
+                onChange={(e) => setSendAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                min="0" // Prevent negative numbers via browser validation (though state handles > 0 check)
+                step="any" // Allow decimals
+                disabled={isLoading}
               />
             </div>
 
-            {/* Action Buttons - Adjusted button styles for dark theme */}
-            <div className="flex justify-end space-x-6">
+             {/* Token Selection (Commented out as only USDC seems handled by contract func) */}
+            {/* If multiple tokens ARE supported by `transferByEmployer` based on an argument, re-enable and adjust logic */}
+            {/* <div className="mb-6">
+               <label className="block text-gray-300 text-sm font-medium mb-2">Select Token:</label>
+               <div className="flex space-x-4">
+                 {["USDC"].map((token) => ( // Update if other tokens possible
+                   <label key={token} className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer ${selectedToken === token ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>
+                     <input
+                       type="radio" className="sr-only" value={token}
+                       checked={selectedToken === token}
+                       onChange={() => setSelectedToken(token)} // You'd need a setSelectedToken state hook
+                       disabled={isLoading}
+                     />
+                     {token}
+                   </label>
+                 ))}
+               </div>
+            </div> */}
+
+            {/* Status Message Area */}
+            {txStatusMessage && (
+              <div className="mb-4 text-center min-h-[20px]">
+                 <p className={`text-sm font-medium ${
+                     isError ? 'text-red-400'
+                     : isSuccess ? 'text-green-400'
+                     : isLoading ? 'text-yellow-400'
+                     : 'text-gray-400' // Default or processing messages
+                  }`}>
+                     {txStatusMessage}
+                     {txHash && ( // Show link to explorer if hash is available
+                         <a
+                             href={`${linea_scan}/tx/${txHash}`}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="text-blue-400 hover:text-blue-300 underline ml-2"
+                             title="View on Lineascan"
+                         >
+                             (View Tx)
+                         </a>
+                     )}
+                 </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-4">
               <button
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors text-lg" // Darker button background
-                onClick={onClose}
+                type="button"
+                className="bg-gray-600 hover:bg-gray-500 text-gray-100 font-bold py-2 px-5 rounded focus:outline-none focus:shadow-outline transition-colors text-base disabled:opacity-50"
+                onClick={handleClose} // Use internal handler
+                disabled={isLoading} // Disable cancel during transaction? Optional
               >
                 Cancel
               </button>
               <button
-                className="bg-black hover:bg-gray-900 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center space-x-3 text-lg" // Black send button
+                type="button"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded focus:outline-none focus:shadow-outline transition-colors flex items-center justify-center space-x-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleSend}
-                disabled={!isAddressValid || !sendAmount || !recipientAddress}
+                disabled={
+                    !isValidRecipient ||
+                    !recipientAddress ||
+                    !sendAmount ||
+                    Number(sendAmount) <= 0 ||
+                    isLoading || // Main disabling condition
+                    !businessAddress // Disable if wallet not connected
+                 }
               >
-                <Send size={20} />
-                <span>Send</span>
+                {isLoading ? (
+                  <>
+                    <span>Processing...</span>
+                    <Loader2 size={18} className="animate-spin ml-2" />
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    <span>Send</span>
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
