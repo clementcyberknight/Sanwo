@@ -163,7 +163,7 @@ export default function WorkerConnectPage() {
 
             {/* Connect Wallet Button */}
             <div className="mb-8 flex justify-center">
-              {!address ? (
+              {!account.address ? (
                 <div>
                   {connectors
                     .filter((connector) => connector.name === "MetaMask")
@@ -190,15 +190,10 @@ export default function WorkerConnectPage() {
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
                     <span className="text-sm">
-                      {address.slice(0, 6)}...{address.slice(-4)}
+                      {account.address.slice(0, 6)}...
+                      {account.address.slice(-4)}
                     </span>
                   </div>
-                  <button
-                    onClick={() => disconnect()}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    Disconnect
-                  </button>
                 </div>
               )}
             </div>

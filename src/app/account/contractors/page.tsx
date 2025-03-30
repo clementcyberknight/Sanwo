@@ -1116,7 +1116,7 @@ export default function ContractorPage() {
 
   // --- Render ---
   return (
-    <div className="max-w-[1400px] mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
+    <div className="max-w-[1400px] mx-auto p-4 md:p-6 bg-white min-h-screen">
       <ToastContainer />
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -1223,7 +1223,7 @@ export default function ContractorPage() {
                   {/* Invite Button */}
                   <div className="w-full sm:w-auto flex justify-end">
                     <button
-                      className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="w-full sm:w-auto px-4 py-2 bg-black text-white text-sm font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-black transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       onClick={() => setActiveTab("INVITE CONTRACTOR")}
                     >
                       <UserPlus size={16} />
@@ -1479,7 +1479,7 @@ export default function ContractorPage() {
                     </button>
                     <button
                       type="button"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       onClick={handleAddContractor}
                     >
                       Invite Contractor
