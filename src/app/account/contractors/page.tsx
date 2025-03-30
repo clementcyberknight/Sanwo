@@ -1074,7 +1074,7 @@ export default function ContractorPage() {
   );
 
   const CONTRACTOR_ROLES = [
-    /* ... keep existing roles ... */ "Freelancer",
+    "Freelancer",
     "Plumbing Repair",
     "Real Estate Agent",
     "Content Creator",
