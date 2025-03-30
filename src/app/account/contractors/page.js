@@ -30,13 +30,12 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Papa from "papaparse";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ethers, parseUnits } from "ethers";
 import { abi, payWorkers } from "@/sc_stylus/scabi";
 import { useAccount } from "wagmi";
 
-// Add this function near your other utility functions
 const getModalPosition = (buttonRef) => {
   if (!buttonRef.current)
     return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
@@ -45,7 +44,6 @@ const getModalPosition = (buttonRef) => {
   const viewportHeight = window.innerHeight;
   const viewportWidth = window.innerWidth;
 
-  // Check if modal would be too close to bottom of viewport
   const isNearBottom = rect.bottom > viewportHeight - 300;
 
   if (isNearBottom) {
@@ -235,10 +233,8 @@ export default function ContractorPage() {
   const actionMenuRef = useRef(null);
   const actionButtonRef = useRef(null);
 
-  // Add this state for modal positioning
   const [modalPosition, setModalPosition] = useState({});
 
-  // Add this state near your other state declarations
   const [selectedContractor, setSelectedContractor] = useState(null);
 
   useEffect(() => {
@@ -253,13 +249,12 @@ export default function ContractorPage() {
           setIsLoadingAccount(false);
         }
       } else {
-        //User is signed out.
         setContractors([]);
         setIsLoadingAccount(false);
-        router.push("/auth/login"); // Redirect to login page
+        router.push("/auth/login");
       }
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount.
+    return () => unsubscribe();
   }, [router]);
 
   useEffect(() => {
