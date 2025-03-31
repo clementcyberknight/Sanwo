@@ -111,16 +111,12 @@ const TransactionDetailsModal = ({
                   <DetailItem
                     label="Amount"
                     value={`${
-                      transaction.depositAmount || transaction.withdrawalAmount
-                    } ${
-                      transaction.depositToken || transaction.withdrawalToken
-                    }`}
+                      transaction.depositAmount || transaction.amount
+                    } ${transaction.depositToken || transaction.token}`}
                   />
                   <DetailItem
                     label="Status"
-                    value={
-                      transaction.depositStatus || transaction.withdrawalStatus
-                    }
+                    value={transaction.depositStatus || transaction.status}
                   />
                   <DetailItem
                     label="Date"

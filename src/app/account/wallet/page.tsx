@@ -54,7 +54,10 @@ interface Transaction {
   withdrawalAmount?: number;
   depositToken?: string;
   withdrawalToken?: string;
+  token?: string;
   depositStatus?: string;
+  amount?: string;
+  status?: string;
   withdrawalStatus?: string;
   category: string;
   transactionHash: string;
@@ -504,9 +507,9 @@ const WalletDashboard = () => {
   }
 
   const renderTransactionAmount = (tx: Transaction) => {
-    const amount =
-      tx.type === "deposit" ? tx.depositAmount : tx.withdrawalAmount;
-    const token = tx.type === "deposit" ? tx.depositToken : tx.withdrawalToken;
+    const amount = tx.type === "deposit" ? tx.depositAmount : tx.amount;
+    const token = tx.type === "deposit" ? tx.depositToken : tx.token;
+    //@ts-ignore
     return `${formatCurrency(Math.abs(amount || 0))} ${token}`;
   };
 
@@ -517,7 +520,7 @@ const WalletDashboard = () => {
   };
 
   const renderTransactionStatus = (tx: Transaction) => {
-    return tx.type === "deposit" ? tx.depositStatus : tx.withdrawalStatus;
+    return tx.type === "deposit" ? tx.depositStatus : tx.status;
   };
 
   const renderTransactionAddress = (tx: Transaction) => {
