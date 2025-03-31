@@ -1,4 +1,4 @@
-# Sanwó: Streamlining Workforce Payroll & Payments with Web3 Technology
+# Sanwó: Streamlining Workforce Payroll & Payments For Web3 Business
 
 ## Overview
 
