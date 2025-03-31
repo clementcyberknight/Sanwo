@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Sanwó: Streamlining Workforce Payroll & Payments with Web3 Technology
 
-## Getting Started
+## Overview
 
-First, run the development server:
+Sanwó is a fintech platform designed to simplify and enhance how businesses manage their workforce payroll and contractor payments,Vendor payment, leveraging the power of Web3 technology for secure, transparent, and efficient transactions.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Key Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+*   **Payroll Management:**
+    *   Manage employee information (name, email, role, salary).
+    *   Schedule recurring payroll payments.
+    *   Track payment history.
+    *   Generate payroll reports.
+*   **Contractor Payments:**
+    *   Onboard and manage contractors.
+    *   Send secure payment invitations.
+    *   Track contractor payment status.
+*   **Web3 Wallet Integration:**
+    *   Secure connection to Web3 wallets for seamless transactions.
+    *   Payment is in USDC
+*   **Transaction Tracking:**
+    *   Comprehensive record of all payroll and contractor payment transactions.
+    *   Filtering and search capabilities.
+*   **Financial Reporting:**
+    *   Overview of key financial metrics (total payroll disbursed, transaction volume).
+    *   Payment trends analysis.
+*   **User Authentication & Security:**
+    *   Firebase authentication for secure user accounts.
+    *   MetaMask SDK integration for Web3 wallet management and secure transactions.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Technologies Used
 
-## Learn More
+*   **Frontend:** Next.js, Tailwind CSS, Lucide React (icons), React Toastify (notifications).
+*   **Backend & Authentication:** Firebase Authentication, Firestore Database, MetaMask SDK.
+*   **Web3 Integration:** MetaMask SDK, Ether.js, Solidity smart contract.
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Key Components
 
-## Deploy on Vercel
+*   **`PayrollPage.js`:**  Manages the main payroll interface, including employee lists, payment schedules, and transaction history.
+*   **`WorkersPage.js`:**  Displays and manages the worker list.
+*   **`ContractorPage.js`:**  Manages contractor information and payments.
+*   **`SideMenu.js`:**  Provides navigation throughout the application.
+*   **`SignupPage.js`:** Handles user registration and initial business setup, integrating Firebase and Arcana.
+*   **`FirebaseConfig.js`:** Firebase credentials and helper functions.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1.  Fork the repository.
+2.  Create a new branch for your feature or bug fix.
+3.  Implement your changes and write tests.
+4.  Submit a pull request.
