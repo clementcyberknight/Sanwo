@@ -282,6 +282,7 @@ const WalletDepositModal: React.FC<WalletDepositModalProps> = ({
             abi: EMPLOYER_POOL_ABI,
             functionName: "deposit",
             args: [depositAmountParsed],
+            gas:BigInt(200000)
           });
 
           console.log("Deposit transaction sent to wallet...");
