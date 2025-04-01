@@ -1,8 +1,16 @@
+![alt text](https://firebasestorage.googleapis.com/v0/b/trivixpay.firebasestorage.app/o/Screenshot%202025-03-28%20220606.png?alt=media&token=fcd57a4d-15b9-4cb1-9474-700290589a9c)
+
 # Sanwó: Streamlining Workforce Payroll & Payments For Web3 Business
 
 ## Overview
 
 Sanwó is a fintech platform designed to simplify and enhance how businesses manage their workforce payroll and contractor payments,Vendor payment, leveraging the power of Web3 technology for secure, transparent, and efficient transactions.
+
+<pre>
+const EmployerPoolContractAddress ="0x93877a92e644B8Efb29B12b258c5C4B637BEDE75";
+const SanwoUtilityToken = "0xE78751788EE2Bd9bE6691c8e9BB618968795a956";
+</pre>
+
 
 ## Key Features
 
@@ -47,6 +55,11 @@ Sanwó is a fintech platform designed to simplify and enhance how businesses man
 *   **`FirebaseConfig.js`:** Firebase credentials and helper functions.
 
 
+![alt text](https://firebasestorage.googleapis.com/v0/b/trivixpay.firebasestorage.app/o/sanwo_landing.png?alt=media&token=cc4c2811-83d0-401c-bb7c-53dd534fe8bc)
+
+![alt text](https://firebasestorage.googleapis.com/v0/b/trivixpay.firebasestorage.app/o/signup.png?alt=media&token=1bdafeed-4eec-4156-9d9c-b40be64dc2c0)
+
+![alt text](https://firebasestorage.googleapis.com/v0/b/trivixpay.firebasestorage.app/o/trivix_dashboard.png?alt=media&token=93ca2bc6-126e-4175-85de-d594eb8604e4)
 
 ## Contributing
 
